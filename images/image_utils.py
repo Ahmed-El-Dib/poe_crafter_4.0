@@ -16,7 +16,8 @@ def locate_center(image_path, confidence=0.9):
 
             try:
                 loc = pyautogui.locate(template, screenshot, confidence=confidence)
-            except Exception:
+            except Exception as e:
+                print(e)
                 loc = None
 
             if loc:

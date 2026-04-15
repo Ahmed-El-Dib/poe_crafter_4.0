@@ -6,7 +6,7 @@ Stop with Ctrl+C.
 from pynput import mouse
 from focus_window import focus_window
 
-focus_window()
+focus_window("Path of Exile")
 
 def on_click(x, y, button, pressed):
     if button == mouse.Button.right and pressed:

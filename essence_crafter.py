@@ -16,12 +16,11 @@ from focus_window import focus_window
 # -----------------------------
 START_COORDS = (28, 147)
 TILE_WIDTH = 26
-focus_window("Path of Exile")
-time.sleep(1)
-ITEM_CLASS = "Cluster Jewels"
-CRAFTING_TAB = CURRENCY_TAB  # change if needed
+
+ITEM_CLASS = "Manifold Ring"
+CRAFTING_TAB = ESSENCE_TAB  # change if needed
 CRAFTING_TAB_COORDS = locate_center(CURRENCY_TAB, confidence=0.8)
-SRC_TAB = SOURCE_TAB_LAPOP  # change if needed
+SRC_TAB = SOURCE_TAB  # change if needed
 
 CLUSTER_TARGETS = [
 
@@ -41,10 +40,8 @@ CLUSTER_TARGETS = [
 VALUABLE_COMBOS = [
     ("Calamitous", "Feed the Fury", "Martial Prowess"),
     ("Calamitous", "Feed the Fury", "Heavy Hitter"),
-    ("Calamitous", "Feed the Fury", "Smite the Weak"),
     ("Calamitous", "Fuel the Fight", "Martial Prowess"),
     ("Calamitous", "Titanic Swings", "Smite the Weak"),
-    ("Calamitous", "Titanic Swings", "Martial Prowess"),
     ("Calamitous", "Surefooted Striker", "Martial Prowess"),
     ("Calamitous", "Surefooted Striker", "Heavy Hitter"),
     ("Calamitous", "Surefooted Striker", "Smite the Weak"),
@@ -58,29 +55,6 @@ VALUABLE_COMBOS = [
     ("Brutal Infamy", "Feed the Fury", "Smite the Weak"),
     ("Drive the destruction", "Feed the Fury", "Martial Prowess"),
     ("feed the fury", "graceful execution", "martial prowess"),
-    ("feed the fury", "Fearsome Warrior", "martial prowess"),
-    ("feed the fury", "Fearsome Warrior", "Heavy Hitter"),
-    ("feed the fury", "Fearsome Warrior", "martial prowess"),
-    ("feed the fury", "Fearsome Warrior", "Smite the weak"),
-    ("feed the fury", "Titanic swings", "Smite the weak"),
-    ("Surefooted Striker", "Brutal Infamy", "Martial Prowess"),
-    ("Surefooted Striker", "Brutal Infamy", "Heavy Hitter"),
-    ("Surefooted Striker", "Brutal Infamy", "Smite the Weak"),
-    ("Calamitous", "Brutal Infamy", "Martial Prowess"),
-    ("Calamitous", "Brutal Infamy", "Heavy Hitter"),
-    ("Calamitous", "Brutal Infamy", "Smite the Weak"),
-    ("Titanic Swings", "Fearsome Warrior", "martial prowess"),
-    ("Titanic Swings", "Fearsome Warrior", "Heavy Hitter"),
-    ("Titanic Swings", "Fearsome Warrior", "Smite the weak"),
-    ("Surefooted Striker", "Fuel the Fight", "Martial Prowess"),
-    ("Surefooted Striker", "Fuel the Fight", "Heavy Hitter"),
-    ("Surefooted Striker", "Fuel the Fight", "Smite the Weak"),
-    ("Calamitous", "Fuel the Fight", "Martial Prowess"),
-    ("Calamitous", "Fuel the Fight", "Heavy Hitter"),
-    ("Calamitous", "Fuel the Fight", "Smite the Weak"),
-    ("feed the fury", "Fuel the Fight", "Heavy Hitter"),
-    ("feed the fury", "Fuel the Fight", "martial prowess"),
-    ("feed the fury", "Fuel the Fight", "Smite the weak"),
 ]
 
 GOOD_TO_SLAM = ["overlord"]
@@ -90,22 +64,6 @@ def is_good_to_slam(mods):
         any(g.lower() in mod.get('text', '').lower() for mod in mods)
         for g in GOOD_TO_SLAM
     )
-
-
-# Force exit
-from pynput import keyboard
-import os
-def on_press(key):
-    global running
-    if key == keyboard.Key.esc:
-        pyautogui.keyUp('shift')
-        print("Stopping...")
-        os._exit(0)
-
-listener = keyboard.Listener(on_press=on_press)
-listener.start()
-
-
 # -----------------------------
 # STASH NAVIGATION
 # -----------------------------
@@ -114,7 +72,7 @@ def clear_crafting_area_and_move_to_tab(tab_image):
 
     pyautogui.moveTo(*CRAFTING_TAB_COORDS)
     pyautogui.leftClick()
-    pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
+    pyautogui.moveTo(*ESSENCE_CRAFT_COORDS)
     pyautogui.keyDown('ctrl')
     pyautogui.leftClick()
     pyautogui.keyUp('ctrl')
@@ -131,14 +89,14 @@ def move_to_crafter(coords):
     pyautogui.moveTo(*coords)
     pyautogui.click()
 
-    tab_coords = locate_center(CURRENCY_TAB, confidence=0.8)
+    tab_coords = locate_center(ESSENCE_TAB, confidence=0.8)
     if not tab_coords:
         raise RuntimeError("Currency tab not found")
 
     pyautogui.moveTo(*tab_coords)
     pyautogui.click()
 
-    pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
+    pyautogui.moveTo(*ESSENCE_CRAFT_COORDS)
     pyautogui.click()
 
 
@@ -208,14 +166,23 @@ exalts = 0
 regals = 0
 annuls = 0
 
-def slam():
+def contempt():
     global exalts
     if exalts >= 590:
         print("Exalt limit reached, exiting.")
         exit()
     exalts += 1
     use_currency(EXALT)
-    print(parse_item_mods(CURRENCY_CRAFT_COORDS))
+    print(parse_item_mods(ESSENCE_CRAFT_COORDS))
+
+def slam():
+    global exalts
+    if exalts >= 590:
+        print("Exalt limit reached, exiting.")
+        exit()
+    exalts += 1
+    use_currency(EXALT_)
+    print(parse_item_mods(ESSENCE_CRAFT_COORDS))
  
 
 def scoure():
@@ -244,16 +211,17 @@ def spam_alt():
 
 def use_alt():
     global alts
-    if alts >= 10500:
+    if alts >= 14000:
         print("Alt limit reached, exiting.")
         exit()
     alts += 1
-    if alts > 5600:
+    if alts > 6400:
+        exit()
         use_currency(ALT, spammable=True)
-    elif alts > 700:
+    elif alts > 5000:
         use_currency(ALT_2, spammable=True)
     else:
-        use_currency(ALT_3, spammable=True)
+        use_currency(ALT, spammable=True)
 
 def regal():
     global regals
@@ -387,7 +355,7 @@ def main():
 
         # Craft loop
         while True:
-            mods = parse_item_mods(CURRENCY_CRAFT_COORDS)
+            mods = parse_item_mods(ESSENCE_CRAFT_COORDS)
             result = determine_action_clusters(mods)
         
             if result == "DONE":

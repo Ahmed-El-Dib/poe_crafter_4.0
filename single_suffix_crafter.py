@@ -12,15 +12,36 @@ from focus_window import focus_window
 # -----------------------------
 # CONFIG
 # -----------------------------
+
+focus_window("Path of Exile")
 START_COORDS = (28, 147)
 TILE_WIDTH = 26
-
-ITEM_CLASS = "Large Cluster Jewel"
 CRAFTING_TAB = CURRENCY_TAB
 CRAFTING_TAB_COORDS = locate_center(CURRENCY_TAB, confidence=0.8)
 SRC_TAB = SOURCE_TAB
 
-TARGET = "Primordial Bond"
+
+ITEM_CLASS = "Profane Wand"
+TARGETS = ["Magister's", "of Finesse", "of Dissolution","of Exsanguinating", "Thunderhand's", "Esh's", "Runic"]
+# TARGETS = ["Magister's"]
+TARGET_TYPE = "any" #prefix, suffix or any
+
+
+
+
+
+# Force exit
+from pynput import keyboard
+import os
+def on_press(key):
+    global running
+    if key == keyboard.Key.esc:
+        pyautogui.keyUp('shift')
+        print("Stopping...")
+        os._exit(0)
+
+listener = keyboard.Listener(on_press=on_press)
+listener.start()
 
 
 # -----------------------------
@@ -77,7 +98,7 @@ def find_item(item_class, idx):
             if not text:
                 continue
 
-            if "Large Cluster Jewel".lower() in text.lower():
+            if ITEM_CLASS.lower() in text.lower():
                 print(f"Found {item_class} at ({x},{y})")
                 move_to_crafter((x, y))
                 return True
@@ -96,12 +117,23 @@ def get_item(item_class, tab_image, idx):
 
 spamming = False
 
-def determine_action_single_suffix(mods):
+def determine_action_single_suffix(mods, target_type):
     global spamming
 
     # ✅ Target found
-    if any(TARGET.lower() in mod.get('text', '').lower() for mod in mods):
-        print(f"✅ Found {TARGET}")
+    match = next(
+    (
+        t
+        for t in TARGETS
+        for mod in mods
+        for field in ('text', 'name')
+        if t.lower() in mod.get(field, '').lower()
+    ),
+    None  # default if no match
+    )
+
+    if match:
+        print("Found target:", match)
         pyautogui.keyUp('shift')  # release shift if it was held down
         spamming = False
         time.sleep(0.1)
@@ -110,23 +142,72 @@ def determine_action_single_suffix(mods):
     has_prefix = any(mod.get('type') == 'prefix' for mod in mods)
     has_suffix = any(mod.get('type') == 'suffix' for mod in mods)
 
-    # Case 1: prefix only
-    if has_prefix and not has_suffix:
-        if spamming:
-            alt_currency(AUG)
-        else:
-            spamming = False
-            use_currency(AUG)
 
-    # Case 2: has suffix
-    elif has_suffix:
-        if spamming:
-            spam_currency(ALT)
-        else:
-            spamming = True
-            use_currency(ALT, spammable=True)
+    # By here we are sure we dont have a match
 
-    return "CONTINUE"
+    # If no mods - normal item - trans to magic
+    if not (has_suffix or has_prefix):
+        use_currency(TRANS)
+
+    # Looking for Suffix - Augs on open suffix only
+    if target_type.lower() == "suffix":
+        # Open Suffix - Aug
+        if not has_suffix:
+            if spamming:
+                alt_currency(AUG)
+            else:
+                spamming = False
+                use_currency(AUG)
+
+        # Full Suffix - keep alting
+        else:
+            if spamming:
+                spam_currency(ALT)
+            else:
+                spamming = True
+                use_currency(ALT, spammable=True)
+
+        return "CONTINUE"
+    
+    # Looking for prefix - Augs on open prefix only
+    elif target_type.lower() == "prefix":
+        # Open prefix - Aug
+        if not has_prefix:
+            if spamming:
+                alt_currency(AUG)
+            else:
+                spamming = False
+                use_currency(AUG)
+
+        # Full prefix - keep alting
+        elif has_prefix:
+            if spamming:
+                spam_currency(ALT)
+            else:
+                spamming = True
+                use_currency(ALT, spammable=True)
+
+        return "CONTINUE"
+    
+    # Looking for any - Augs on any open affix
+    else:
+        # Open affix - Aug
+        if has_suffix ^ has_prefix:
+            if spamming:
+                alt_currency(AUG)
+            else:
+                spamming = False
+                use_currency(AUG)
+
+        # Full affixes - Keep spamming
+        elif has_prefix and has_suffix:
+            if spamming:
+                spam_currency(ALT)
+            else:
+                spamming = True
+                use_currency(ALT, spammable=True)
+
+        return "CONTINUE"
 
 
 # -----------------------------
@@ -136,7 +217,7 @@ def determine_action_single_suffix(mods):
 def craft_item(craft_fn, parse_fn):
     while True:
         mods = parse_fn(CURRENCY_CRAFT_COORDS)
-        result = craft_fn(mods)
+        result = craft_fn(mods, TARGET_TYPE)
 
         if result == "DONE":
             return

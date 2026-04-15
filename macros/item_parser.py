@@ -99,7 +99,7 @@ def parse_item_mods(item_location) -> list:
         line = lines[i].strip()
         
         # Look for Prefix/Suffix modifier line
-        mod_match = re.search(r'\{ (Prefix|Suffix) Modifier "([^"]+)"(?: \(Tier:\s*(\d+)\))?', line)
+        mod_match = re.search(r'\ (Prefix|Suffix) Modifier "([^"]+)"(?: \(Tier:\s*(\d+)\))?', line)
         if mod_match:
             mod_type = mod_match.group(1).lower()      # prefix or suffix
             mod_name = mod_match.group(2)
