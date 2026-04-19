@@ -31,19 +31,19 @@ CLUSTER_TARGETS = [
 "martial prowess",
 "brutal infamy",
 "calamitous",
-"titanic swings",
-"graceful execution",
-"heavy hitter",
+# "titanic swings",
+# "graceful execution",
+# "heavy hitter",
 "smite the weak",
 "overlord",
 ]
 
 VALUABLE_COMBOS = [
     ("Calamitous", "Feed the Fury", "Martial Prowess"),
-    ("Calamitous", "Feed the Fury", "Heavy Hitter"),
-    ("Calamitous", "Feed the Fury", "Smite the Weak"),
+    # ("Calamitous", "Feed the Fury", "Heavy Hitter"),
+    # ("Calamitous", "Feed the Fury", "Smite the Weak"),
     ("Calamitous", "Fuel the Fight", "Martial Prowess"),
-    ("Calamitous", "Titanic Swings", "Smite the Weak"),
+    # ("Calamitous", "Titanic Swings", "Smite the Weak"),
     ("Calamitous", "Titanic Swings", "Martial Prowess"),
     ("Calamitous", "Surefooted Striker", "Martial Prowess"),
     ("Calamitous", "Surefooted Striker", "Heavy Hitter"),
@@ -65,10 +65,10 @@ VALUABLE_COMBOS = [
     ("feed the fury", "Titanic swings", "Smite the weak"),
     ("Surefooted Striker", "Brutal Infamy", "Martial Prowess"),
     ("Surefooted Striker", "Brutal Infamy", "Heavy Hitter"),
-    ("Surefooted Striker", "Brutal Infamy", "Smite the Weak"),
+    # ("Surefooted Striker", "Brutal Infamy", "Smite the Weak"),
     ("Calamitous", "Brutal Infamy", "Martial Prowess"),
-    ("Calamitous", "Brutal Infamy", "Heavy Hitter"),
-    ("Calamitous", "Brutal Infamy", "Smite the Weak"),
+    # ("Calamitous", "Brutal Infamy", "Heavy Hitter"),
+    # ("Calamitous", "Brutal Infamy", "Smite the Weak"),
     ("Titanic Swings", "Fearsome Warrior", "martial prowess"),
     ("Titanic Swings", "Fearsome Warrior", "Heavy Hitter"),
     ("Titanic Swings", "Fearsome Warrior", "Smite the weak"),
@@ -76,11 +76,11 @@ VALUABLE_COMBOS = [
     ("Surefooted Striker", "Fuel the Fight", "Heavy Hitter"),
     ("Surefooted Striker", "Fuel the Fight", "Smite the Weak"),
     ("Calamitous", "Fuel the Fight", "Martial Prowess"),
-    ("Calamitous", "Fuel the Fight", "Heavy Hitter"),
+    # ("Calamitous", "Fuel the Fight", "Heavy Hitter"),
     ("Calamitous", "Fuel the Fight", "Smite the Weak"),
-    ("feed the fury", "Fuel the Fight", "Heavy Hitter"),
+    # ("feed the fury", "Fuel the Fight", "Heavy Hitter"),
     ("feed the fury", "Fuel the Fight", "martial prowess"),
-    ("feed the fury", "Fuel the Fight", "Smite the weak"),
+    # ("feed the fury", "Fuel the Fight", "Smite the weak"),
 ]
 
 GOOD_TO_SLAM = ["overlord"]
@@ -235,22 +235,24 @@ def annul():
     use_currency(ANNUL)
 
 def spam_alt():
+    max_alts = 5000
     global alts
-    if alts >= 14400:
+    if alts >= max_alts:
         print("Alt limit reached, exiting.")
         exit()
     alts += 1
     spam_currency(ALT)
 
 def use_alt():
+    max_alts = 5000
     global alts
-    if alts >= 10500:
+    if alts >= max_alts:
         print("Alt limit reached, exiting.")
         exit()
     alts += 1
-    if alts > 5600:
+    if alts > 0:
         use_currency(ALT, spammable=True)
-    elif alts > 700:
+    elif alts > max_alts-4950:
         use_currency(ALT_2, spammable=True)
     else:
         use_currency(ALT_3, spammable=True)

@@ -90,7 +90,10 @@ def parse_item_mods(item_location) -> list:
     mouse.move(coords=item_location)
     # time.sleep(0.05)  # small delay for tooltip
     description = copy_item()  # assumes this returns full clipboard text
+    return read_item(description)
     
+
+def read_item(description):
     mods = []
     lines = description.strip().split("\n")
     
@@ -98,33 +101,73 @@ def parse_item_mods(item_location) -> list:
     while i < len(lines):
         line = lines[i].strip()
         
-        # Look for Prefix/Suffix modifier line
-        mod_match = re.search(r'\ (Prefix|Suffix) Modifier "([^"]+)"(?: \(Tier:\s*(\d+)\))?', line)
+        # Match modifier line inside {}
+        mod_match = re.search(
+            r'\{\s*(.*?)\b(Prefix|Suffix) Modifier "([^"]+)"(?: \(Tier:\s*(\d+)\))?(?:\s*—\s*(.*?))?\s*\}',
+            line
+        )
+        
         if mod_match:
-            mod_type = mod_match.group(1).lower()      # prefix or suffix
-            mod_name = mod_match.group(2)
-            tier = mod_match.group(3)
-            
-            # Collect all lines **after this modifier** until:
-            # - next modifier `{ ... }` OR
-            # - separator `--------`
+            preamble = mod_match.group(1).strip()  # e.g. "Fractured", "Crafted"
+            mod_type = mod_match.group(2).lower()
+            mod_name = mod_match.group(3)
+            tier = mod_match.group(4)
+            tags = mod_match.group(5)
+
+            # Extract flags from preamble
+            flags = []
+            if preamble:
+                flags = preamble.split()
+
+            # Collect text lines under this mod
             text_lines = []
-            i += 1  # move to next line
+            i += 1
             while i < len(lines):
                 next_line = lines[i].strip()
-                if re.match(r'\{ (Prefix|Suffix) Modifier', next_line) or '--------' in next_line:
+                
+                # Stop at next mod or separator
+                if re.search(r'\{\s*.*\b(Prefix|Suffix) Modifier', next_line) or '--------' in next_line:
                     break
-                text_lines.append(next_line)
+                
+                if next_line:  # skip empty lines
+                    text_lines.append(next_line)
+                
                 i += 1
-            
+
             mods.append({
                 'type': mod_type,
                 'name': mod_name,
                 'tier': tier,
+                'flags': flags,          # e.g. ['Fractured']
+                'tags': tags.split(", ") if tags else [],
                 'text': "\n".join(text_lines)
             })
         else:
-            i += 1  # no mod here, move on
+            i += 1
     
-    # print(f"Parsed mods: {mods}")
     return mods
+
+item = """
+Item Class: Jewels
+Rarity: Magic
+Notable Large Cluster Jewel of the Newt
+--------
+Item Level: 84
+--------
+Adds 8 Passive Skills (enchant)
+(Added Passive Skills are never considered to be in Radius by other Jewels) (enchant)
+(All Added Passive Skills are Small unless otherwise specified) (enchant)
+2 Added Passive Skills are Jewel Sockets (enchant)
+Added Small Passive Skills grant: 12% increased Damage with Two Handed Weapons (enchant)
+(Passive Skills that are not Notable, Masteries, Keystones, or Jewel Sockets are Small) (enchant)
+--------
+{ Prefix Modifier "Notable" (Tier: 1) — Mana, Attack, Speed }
+1 Added Passive Skill is Fuel the Fight — Unscalable Value
+{ Suffix Modifier "of the Newt" (Tier: 3) — Life }
+Added Small Passive Skills also grant: Regenerate 0.1% of Life per Second
+(Passive Skills that are not Notable, Masteries, Keystones, or Jewel Sockets are Small)
+--------
+Place into an allocated Large Jewel Socket on the Passive Skill Tree. Added passives do not interact with jewel radiuses. Right click to remove from the Socket.
+"""
+
+print(read_item(item))

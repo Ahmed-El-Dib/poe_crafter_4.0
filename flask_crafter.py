@@ -1,3 +1,5 @@
+from operator import is_
+
 import pyautogui
 import time
 
@@ -5,26 +7,39 @@ from macros.currency_macros import *
 from macros.item_parser import parse_item_mods, copy_item
 from images.image_utils import locate_center
 from images.img_paths import *
-from laptop_config import *
+from config import *
 from focus_window import focus_window
 
 
 # -----------------------------
 # CONFIG
 # -----------------------------
-
-focus_window("Path of Exile")
 START_COORDS = (28, 147)
 TILE_WIDTH = 26
-CRAFTING_TAB = CURRENCY_TAB
+focus_window("Path of Exile")
+time.sleep(1)
+ITEM_CLASS = "Flask"
+CRAFTING_TAB = CURRENCY_TAB  # change if needed
 CRAFTING_TAB_COORDS = locate_center(CURRENCY_TAB, confidence=0.8)
-SRC_TAB = SOURCE_TAB
+SRC_TAB = SOURCE_TAB_LAPOP  # change if needed
 
-
-ITEM_CLASS = "Profane Wand"
-# TARGETS = ["Magister's", "of Finesse", "of Dissolution","of Exsanguinating", "Thunderhand's", "Esh's", "Runic"]
-TARGETS = ["Magister's"]
-TARGET_TYPE = "any" #prefix, suffix or any
+CLUSTER_TARGETS = [
+"Flagellant's",
+"Surgeon's",
+"Perpetual"
+"Abecedarian's",
+"Dabbler's",
+"Alchemist's",
+"of the Armadillo",
+"of the Impala",
+"of the Cheetah",
+"of the Rainbow",
+"of the Kaleidoscope",
+"of Incision",
+"of the Owl",
+"of Bog Moss"
+"of the Cat",
+]
 
 
 
@@ -49,12 +64,11 @@ listener.start()
 # -----------------------------
 
 def clear_crafting_area_and_move_to_tab(tab_image):
+
     pyautogui.moveTo(*CRAFTING_TAB_COORDS)
     pyautogui.leftClick()
-
     pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
     pyautogui.keyDown('ctrl')
-    time.sleep(0.1)
     pyautogui.leftClick()
     pyautogui.keyUp('ctrl')
 
@@ -63,23 +77,26 @@ def clear_crafting_area_and_move_to_tab(tab_image):
         raise RuntimeError("Tab not found")
 
     pyautogui.moveTo(*tab_coords)
-    pyautogui.leftClick()
+    pyautogui.click()
 
 
 def move_to_crafter(coords):
     pyautogui.moveTo(*coords)
-    pyautogui.leftClick()
+    pyautogui.click()
 
+    tab_coords = locate_center(CURRENCY_TAB, confidence=0.8)
+    if not tab_coords:
+        raise RuntimeError("Currency tab not found")
 
-    pyautogui.moveTo(*CRAFTING_TAB_COORDS)
-    pyautogui.leftClick()
+    pyautogui.moveTo(*tab_coords)
+    pyautogui.click()
 
     pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
-    pyautogui.leftClick()
+    pyautogui.click()
 
 
 # -----------------------------
-# FIND ITEM
+# FIND ITEM IN GRID
 # -----------------------------
 
 def find_item(item_class, idx):
@@ -112,116 +129,111 @@ def get_item(item_class, tab_image, idx):
 
 
 # -----------------------------
-# CRAFTING LOGIC (SINGLE TARGET)
+# TARGET LOGIC
+# -----------------------------
+
+def count_targets_found(mods):
+    return sum(
+        any(t.lower() in mod.get('name', '').lower() for mod in mods)
+        for t in CLUSTER_TARGETS
+    )
+
+
+
+# -----------------------------
+# CRAFTING LOGIC
 # -----------------------------
 
 spamming = False
-
-def determine_action_single_suffix(mods, target_type):
-    global spamming
-
-    # ✅ Target found
-    match = next(
-    (
-        t
-        for t in TARGETS
-        for mod in mods
-        for field in ('text', 'name')
-        if t.lower() in mod.get(field, '').lower()
-    ),
-    None  # default if no match
-    )
-
-    if match:
-        print("Found target:", match)
-        pyautogui.keyUp('shift')  # release shift if it was held down
-        spamming = False
-        time.sleep(0.1)
-        return "DONE"
-
-    has_prefix = any(mod.get('type') == 'prefix' for mod in mods)
-    has_suffix = any(mod.get('type') == 'suffix' for mod in mods)
+alts = 0
+aug = 0
+scoures = 0
+exalts = 0
+regals = 0
+annuls = 0
 
 
-    # By here we are sure we dont have a match
 
-    # If no mods - normal item - trans to magic
-    if not (has_suffix or has_prefix):
-        use_currency(TRANS)
+def spam_alt():
+    global alts
+    if alts >= 14400:
+        print("Alt limit reached, exiting.")
+        exit()
+    alts += 1
+    spam_currency(ALT)
 
-    # Looking for Suffix - Augs on open suffix only
-    if target_type.lower() == "suffix":
-        # Open Suffix - Aug
-        if not has_suffix:
-            if spamming:
-                alt_currency(AUG)
-            else:
-                spamming = False
-                use_currency(AUG)
-
-        # Full Suffix - keep alting
-        else:
-            if spamming:
-                spam_currency(ALT)
-            else:
-                spamming = True
-                use_currency(ALT, spammable=True)
-
-        return "CONTINUE"
-    
-    # Looking for prefix - Augs on open prefix only
-    elif target_type.lower() == "prefix":
-        # Open prefix - Aug
-        if not has_prefix:
-            if spamming:
-                alt_currency(AUG)
-            else:
-                spamming = False
-                use_currency(AUG)
-
-        # Full prefix - keep alting
-        elif has_prefix:
-            if spamming:
-                spam_currency(ALT)
-            else:
-                spamming = True
-                use_currency(ALT, spammable=True)
-
-        return "CONTINUE"
-    
-    # Looking for any - Augs on any open affix
+def use_alt():
+    global alts
+    if alts >= 4300:
+        print("Alt limit reached, exiting.")
+        exit()
+    alts += 1
+    if alts > 0:
+        use_currency(ALT, spammable=True)
+    elif alts > 700:
+        use_currency(ALT_2, spammable=True)
     else:
-        # Open affix - Aug
-        if has_suffix ^ has_prefix:
+        use_currency(ALT_3, spammable=True)
+
+
+def determine_action_clusters(mods):
+    global spamming
+    global alts, scoures, exalts, regals, annuls
+    num_mods = len(mods)
+    num_targets = count_targets_found(mods)
+
+    open_suffix = sum(mod.get('type') == 'suffix' for mod in mods) == 1
+    open_prefix = sum(mod.get('type') == 'prefix' for mod in mods) == 1
+
+    
+
+    
+    # --- rarity ---
+    if num_mods == 0:
+        rarity = "normal"
+    else:
+        rarity = "magic"
+
+
+    # --- normal ---
+    if rarity == "normal":
+        spamming = False
+        use_currency(TRANS)
+        return "CONTINUE"
+
+    # --- magic ---
+    if rarity == "magic":
+
+        if num_targets == 2:
+            pyautogui.keyUp('shift')
+            spamming = False
+
+            return "DONE"
+
+        if num_targets == 0:
+            if spamming:
+               spam_alt()
+            else:
+                spamming = True
+                use_alt()
+
+        elif num_targets == 1 and num_mods == 1:
             if spamming:
                 alt_currency(AUG)
             else:
                 spamming = False
                 use_currency(AUG)
 
-        # Full affixes - Keep spamming
-        elif has_prefix and has_suffix:
+        elif num_targets == 1 and num_mods == 2:
             if spamming:
-                spam_currency(ALT)
+                spam_alt()
             else:
                 spamming = True
-                use_currency(ALT, spammable=True)
+                use_alt()
 
         return "CONTINUE"
 
-
-# -----------------------------
-# GENERIC CRAFT RUNNER
-# -----------------------------
-
-def craft_item(craft_fn, parse_fn):
-    while True:
-        mods = parse_fn(CURRENCY_CRAFT_COORDS)
-        result = craft_fn(mods, TARGET_TYPE)
-
-        if result == "DONE":
-            return
-
+    
 
 # -----------------------------
 # INDEX HANDLING
@@ -256,8 +268,13 @@ def main():
             print("No more items found. Stopping.")
             break
 
-        # 🔥 Use your single-target crafter
-        craft_item(determine_action_single_suffix, parse_item_mods)
+        # Craft loop
+        while True:
+            mods = parse_item_mods(CURRENCY_CRAFT_COORDS)
+            result = determine_action_clusters(mods)
+        
+            if result == "DONE":
+                break
 
         idx = advance_idx(idx)
 
