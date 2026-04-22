@@ -115,9 +115,7 @@ def read_item(description):
             tags = mod_match.group(5)
 
             # Extract flags from preamble
-            flags = []
-            if preamble:
-                flags = preamble.split()
+            flags = preamble.split() if preamble else []
 
             # Collect text lines under this mod
             text_lines = []
@@ -134,13 +132,30 @@ def read_item(description):
                 
                 i += 1
 
+            # --- NEW: Extract roll info ---
+            roll = None
+            max_roll = False
+
+            for line_text in text_lines:
+                roll_match = re.search(r'(-?\d+\.?\d*)\s*\((\d+\.?\d*)-(\d+\.?\d*)\)', line_text)
+                if roll_match:
+                    roll_val = float(roll_match.group(1))
+                    min_val = float(roll_match.group(2))
+                    max_val_val = float(roll_match.group(3))
+
+                    roll = int(roll_val) if roll_val.is_integer() else roll_val
+                    max_roll = roll_val == max_val_val
+                    break  # only take first match
+
             mods.append({
                 'type': mod_type,
                 'name': mod_name,
                 'tier': tier,
-                'flags': flags,          # e.g. ['Fractured']
+                'flags': flags,
                 'tags': tags.split(", ") if tags else [],
-                'text': "\n".join(text_lines)
+                'text': "\n".join(text_lines),
+                'roll': roll,
+                'max_roll': max_roll
             })
         else:
             i += 1
@@ -149,25 +164,35 @@ def read_item(description):
 
 item = """
 Item Class: Jewels
-Rarity: Magic
-Notable Large Cluster Jewel of the Newt
+Rarity: Rare
+Vivid Cut
+Medium Cluster Jewel
 --------
-Item Level: 84
+Requirements:
+Level: 54
 --------
-Adds 8 Passive Skills (enchant)
+Item Level: 83
+--------
+Adds 5 Passive Skills (enchant)
 (Added Passive Skills are never considered to be in Radius by other Jewels) (enchant)
 (All Added Passive Skills are Small unless otherwise specified) (enchant)
-2 Added Passive Skills are Jewel Sockets (enchant)
-Added Small Passive Skills grant: 12% increased Damage with Two Handed Weapons (enchant)
+1 Added Passive Skill is a Jewel Socket (enchant)
+Added Small Passive Skills grant: 10% increased Area Damage (enchant)
 (Passive Skills that are not Notable, Masteries, Keystones, or Jewel Sockets are Small) (enchant)
 --------
-{ Prefix Modifier "Notable" (Tier: 1) — Mana, Attack, Speed }
-1 Added Passive Skill is Fuel the Fight — Unscalable Value
-{ Suffix Modifier "of the Newt" (Tier: 3) — Life }
-Added Small Passive Skills also grant: Regenerate 0.1% of Life per Second
+{ Prefix Modifier "Hazardous" (Tier: 2) — Damage }
+Added Small Passive Skills also grant: 3% increased Damage
+{ Prefix Modifier "Notable" (Tier: 1) — Damage, Attack }
+1 Added Passive Skill is Titanic Swings — Unscalable Value
+{ Suffix Modifier "of the Brute" (Tier: 3) — Attribute }
+Added Small Passive Skills also grant: +3(2-3) to Strength
+{ Suffix Modifier "of the Lizard" (Tier: 2) — Life }
+Added Small Passive Skills also grant: Regenerate 0.15% of Life per Second
 (Passive Skills that are not Notable, Masteries, Keystones, or Jewel Sockets are Small)
 --------
-Place into an allocated Large Jewel Socket on the Passive Skill Tree. Added passives do not interact with jewel radiuses. Right click to remove from the Socket.
+Place into an allocated Medium or Large Jewel Socket on the Passive Skill Tree. Added passives do not interact with jewel radiuses. Right click to remove from the Socket.
+
 """
 
 print(read_item(item))
+

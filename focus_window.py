@@ -2,29 +2,27 @@ import win32gui
 import win32con
 import time
 
-def focus_window(window_name):
-    def enum_windows_callback(hwnd, windows):
-        if win32gui.IsWindowVisible(hwnd):
-            title = win32gui.GetWindowText(hwnd)
-            if window_name.lower() in title.lower():
-                windows.append(hwnd)
+#should return true if window is focused, false otherwise - and only try to focus if not already focused
 
-    windows = []
-    win32gui.EnumWindows(enum_windows_callback, windows)
+def focus_window(window_title="Path of Exile"):
+    # Get the handle of the window with the specified title
+    hwnd = win32gui.FindWindow(None, window_title)
 
-    if not windows:
-        print(f"No window found with name: {window_name}")
-        return
+    if hwnd == 0:
+        print(f"Window '{window_title}' not found.")
+        return False
 
-    hwnd = windows[0]
+    # Check if the window is already in the foreground
+    if win32gui.GetForegroundWindow() == hwnd:
+        print(f"Window '{window_title}' is already focused.")
+        return True
 
-    # Restore if minimized
-    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-
-    # Bring to foreground
+    # Bring the window to the foreground
+    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)  # Restore if minimized
     win32gui.SetForegroundWindow(hwnd)
-    print(f"Focused window: {win32gui.GetWindowText(hwnd)}")
+    print(f"Window '{window_title}' has been focused.")
+    return True 
 
 if __name__ == "__main__":
     time.sleep(2)  # Gives you time to switch context if needed
-    focus_window("Path of Exile")
+    focus_window()

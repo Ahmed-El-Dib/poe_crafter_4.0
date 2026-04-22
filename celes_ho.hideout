@@ -1,0 +1,701 @@
+﻿{
+  "version": 1,
+  "language": "English",
+  "hideout_name": "Celestial Nebula Hideout",
+  "hideout_hash": 35022,
+  "doodads": {
+    "Stash": {
+      "hash": 3230065491,
+      "x": 375,
+      "y": 418,
+      "r": 21503,
+      "fv": 0
+    },
+    "Guild Stash": {
+      "hash": 139228481,
+      "x": 399,
+      "y": 395,
+      "r": 30405,
+      "fv": 0
+    },
+    "Waypoint": {
+      "hash": 1224707366,
+      "x": 359,
+      "y": 378,
+      "r": 35826,
+      "fv": 3
+    },
+    "Crafting Bench": {
+      "hash": 2059629901,
+      "x": 380,
+      "y": 368,
+      "r": 29711,
+      "fv": 1
+    },
+    "Map Device": {
+      "hash": 2306038834,
+      "x": 407,
+      "y": 425,
+      "r": 14272,
+      "fv": 0
+    },
+    "Horticrafting Station": {
+      "hash": 1523447611,
+      "x": 394,
+      "y": 363,
+      "r": 30935,
+      "fv": 0
+    },
+    "Heist Locker": {
+      "hash": 1894447409,
+      "x": 350,
+      "y": 399,
+      "r": 20636,
+      "fv": 0
+    },
+    "Expedition Locker": {
+      "hash": 1655178506,
+      "x": 345,
+      "y": 415,
+      "r": 17772,
+      "fv": 0
+    },
+    "Relic Locker": {
+      "hash": 12969733,
+      "x": 346,
+      "y": 448,
+      "r": 13810,
+      "fv": 0
+    },
+    "Recombinator": {
+      "hash": 4243958141,
+      "x": 375,
+      "y": 341,
+      "r": 0,
+      "fv": 0
+    },
+    "Wombgift Locker": {
+      "hash": 4119040930,
+      "x": 329,
+      "y": 397,
+      "r": 0,
+      "fv": 0
+    },
+    "Eagon Caeserius": {
+      "hash": 4087118542,
+      "x": 359,
+      "y": 368,
+      "r": 27616,
+      "fv": 0
+    },
+    "Ailith, First of the Keepers": {
+      "hash": 2636372559,
+      "x": 364,
+      "y": 369,
+      "r": 26634,
+      "fv": 0
+    },
+    "Johan, the King's Hand": {
+      "hash": 3892722674,
+      "x": 293,
+      "y": 352,
+      "r": 26634,
+      "fv": 0
+    },
+    "Faustus, the Financier": {
+      "hash": 69444963,
+      "x": 376,
+      "y": 409,
+      "r": 24667,
+      "fv": 0
+    },
+    "Einhar": {
+      "hash": 2684274993,
+      "x": 415,
+      "y": 477,
+      "r": 3559,
+      "fv": 0
+    },
+    "Alva": {
+      "hash": 2115859440,
+      "x": 356,
+      "y": 427,
+      "r": 12675,
+      "fv": 0
+    },
+    "Helena": {
+      "hash": 845403974,
+      "x": 452,
+      "y": 452,
+      "r": 64583,
+      "fv": 0
+    },
+    "Niko": {
+      "hash": 2906227343,
+      "x": 461,
+      "y": 428,
+      "r": 54476,
+      "fv": 0
+    },
+    "Jun": {
+      "hash": 3992724805,
+      "x": 363,
+      "y": 453,
+      "r": 6167,
+      "fv": 0
+    },
+    "Sister Cassia": {
+      "hash": 10623884,
+      "x": 383,
+      "y": 474,
+      "r": 8191,
+      "fv": 0
+    },
+    "Kirac": {
+      "hash": 2913423765,
+      "x": 437,
+      "y": 469,
+      "r": 52521,
+      "fv": 0
+    },
+    "Dannig, Warrior Skald": {
+      "hash": 2615294807,
+      "x": 309,
+      "y": 342,
+      "r": 55792,
+      "fv": 0
+    },
+    "Gwennen, the Gambler": {
+      "hash": 2818582618,
+      "x": 455,
+      "y": 397,
+      "r": 50077,
+      "fv": 0
+    },
+    "Tujen, the Haggler": {
+      "hash": 1546641971,
+      "x": 409,
+      "y": 373,
+      "r": 36194,
+      "fv": 0
+    },
+    "Rog, the Dealer": {
+      "hash": 1791193999,
+      "x": 434,
+      "y": 379,
+      "r": 39540,
+      "fv": 0
+    },
+    "The Last to Die": {
+      "hash": 1079829134,
+      "x": 418,
+      "y": 391,
+      "r": 37907,
+      "fv": 0
+    },
+    "Lilly Roth": {
+      "hash": 261160331,
+      "x": 390,
+      "y": 387,
+      "r": 37796,
+      "fv": 0
+    },
+    "Ritual Challenger Trophy": {
+      "hash": 1766591153,
+      "x": 464,
+      "y": 442,
+      "r": 51178,
+      "fv": 0
+    },
+    "Blue Light Beam": {
+      "hash": 3967691837,
+      "x": 356,
+      "y": 376,
+      "r": 0,
+      "fv": 6
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 451,
+      "y": 468,
+      "r": 0,
+      "fv": 0
+    },
+    "Vaal Mechanism": {
+      "hash": 4201844291,
+      "x": 409,
+      "y": 360,
+      "r": 50639,
+      "fv": 9
+    },
+    "Vaal Mechanism": {
+      "hash": 4201844291,
+      "x": 439,
+      "y": 454,
+      "r": 0,
+      "fv": 7
+    },
+    "Vaal Mechanism": {
+      "hash": 4201844291,
+      "x": 400,
+      "y": 395,
+      "r": 65379,
+      "fv": 2
+    },
+    "Vaal Mechanism": {
+      "hash": 4201844291,
+      "x": 376,
+      "y": 419,
+      "r": 0,
+      "fv": 2
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 459,
+      "y": 461,
+      "r": 0,
+      "fv": 0
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 446,
+      "y": 463,
+      "r": 0,
+      "fv": 0
+    },
+    "Blue Light Beam": {
+      "hash": 3967691837,
+      "x": 407,
+      "y": 426,
+      "r": 0,
+      "fv": 0
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 454,
+      "y": 463,
+      "r": 0,
+      "fv": 0
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 442,
+      "y": 457,
+      "r": 0,
+      "fv": 0
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 448,
+      "y": 453,
+      "r": 0,
+      "fv": 0
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 444,
+      "y": 453,
+      "r": 0,
+      "fv": 0
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 445,
+      "y": 462,
+      "r": 0,
+      "fv": 0
+    },
+    "Primeval Floor Crystal": {
+      "hash": 461919698,
+      "x": 356,
+      "y": 427,
+      "r": 16282,
+      "fv": 3
+    },
+    "Primeval Floor Crystal": {
+      "hash": 461919698,
+      "x": 364,
+      "y": 453,
+      "r": 11216,
+      "fv": 3
+    },
+    "Primeval Floor Crystal": {
+      "hash": 461919698,
+      "x": 409,
+      "y": 373,
+      "r": 99,
+      "fv": 3
+    },
+    "Primeval Floor Crystal": {
+      "hash": 461919698,
+      "x": 434,
+      "y": 379,
+      "r": 5320,
+      "fv": 3
+    },
+    "Primeval Floor Crystal": {
+      "hash": 461919698,
+      "x": 455,
+      "y": 397,
+      "r": 10642,
+      "fv": 3
+    },
+    "Primeval Floor Crystal": {
+      "hash": 461919698,
+      "x": 461,
+      "y": 428,
+      "r": 65399,
+      "fv": 3
+    },
+    "Primeval Floor Crystal": {
+      "hash": 461919698,
+      "x": 383,
+      "y": 474,
+      "r": 53178,
+      "fv": 3
+    },
+    "Primeval Floor Crystal": {
+      "hash": 461919698,
+      "x": 414,
+      "y": 477,
+      "r": 47510,
+      "fv": 3
+    },
+    "Primeval Floor Mural": {
+      "hash": 2274282180,
+      "x": 408,
+      "y": 426,
+      "r": 7156,
+      "fv": 0
+    },
+    "Sulphite Light": {
+      "hash": 1999675025,
+      "x": 438,
+      "y": 477,
+      "r": 0,
+      "fv": 0
+    },
+    "Sulphite Light": {
+      "hash": 1999675025,
+      "x": 461,
+      "y": 452,
+      "r": 0,
+      "fv": 0
+    },
+    "Golden Sparkles": {
+      "hash": 312707477,
+      "x": 375,
+      "y": 394,
+      "r": 0,
+      "fv": 0
+    },
+    "Temple Throne": {
+      "hash": 2104384023,
+      "x": 450,
+      "y": 465,
+      "r": 8152,
+      "fv": 1
+    },
+    "Columns": {
+      "hash": 149024100,
+      "x": 381,
+      "y": 488,
+      "r": 29269,
+      "fv": 5
+    },
+    "Columns": {
+      "hash": 149024100,
+      "x": 467,
+      "y": 393,
+      "r": 3316,
+      "fv": 5
+    },
+    "Columns": {
+      "hash": 149024100,
+      "x": 346,
+      "y": 447,
+      "r": 37936,
+      "fv": 5
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 435,
+      "y": 428,
+      "r": 0,
+      "fv": 0
+    },
+    "Columns": {
+      "hash": 149024100,
+      "x": 435,
+      "y": 488,
+      "r": 19852,
+      "fv": 5
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 443,
+      "y": 428,
+      "r": 0,
+      "fv": 0
+    },
+    "Columns": {
+      "hash": 149024100,
+      "x": 471,
+      "y": 447,
+      "r": 11508,
+      "fv": 5
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 451,
+      "y": 428,
+      "r": 0,
+      "fv": 0
+    },
+    "Columns": {
+      "hash": 149024100,
+      "x": 426,
+      "y": 361,
+      "r": 59665,
+      "fv": 5
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 409,
+      "y": 398,
+      "r": 65422,
+      "fv": 0
+    },
+    "Ghostly Fog": {
+      "hash": 1095937131,
+      "x": 358,
+      "y": 377,
+      "r": 0,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 409,
+      "y": 390,
+      "r": 59,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 409,
+      "y": 383,
+      "r": 68,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 432,
+      "y": 412,
+      "r": 59276,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 439,
+      "y": 407,
+      "r": 58990,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 446,
+      "y": 402,
+      "r": 59305,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 421,
+      "y": 402,
+      "r": 4915,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 425,
+      "y": 395,
+      "r": 5180,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 429,
+      "y": 388,
+      "r": 5283,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 410,
+      "y": 453,
+      "r": 64453,
+      "fv": 0
+    },
+    "Crypt Fire Pit": {
+      "hash": 322083411,
+      "x": 346,
+      "y": 388,
+      "r": 22206,
+      "fv": 1
+    },
+    "Crypt Fire Pit": {
+      "hash": 322083411,
+      "x": 367,
+      "y": 366,
+      "r": 10038,
+      "fv": 1
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 411,
+      "y": 458,
+      "r": 64060,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 412,
+      "y": 467,
+      "r": 64198,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 392,
+      "y": 450,
+      "r": 4171,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 389,
+      "y": 457,
+      "r": 3766,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 387,
+      "y": 464,
+      "r": 3808,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 384,
+      "y": 441,
+      "r": 60051,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 378,
+      "y": 444,
+      "r": 59977,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 373,
+      "y": 447,
+      "r": 60173,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 380,
+      "y": 428,
+      "r": 602,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 373,
+      "y": 428,
+      "r": 0,
+      "fv": 0
+    },
+    "Primeval Floor Light": {
+      "hash": 3391811001,
+      "x": 367,
+      "y": 428,
+      "r": 0,
+      "fv": 0
+    },
+    "Columns": {
+      "hash": 149024100,
+      "x": 386,
+      "y": 364,
+      "r": 51975,
+      "fv": 4
+    },
+    "Columns": {
+      "hash": 149024100,
+      "x": 346,
+      "y": 407,
+      "r": 42250,
+      "fv": 4
+    },
+    "Maven's Astrolabe": {
+      "hash": 3395710764,
+      "x": 429,
+      "y": 428,
+      "r": 0,
+      "fv": 0
+    },
+    "Maven's Astrolabe": {
+      "hash": 3395710764,
+      "x": 410,
+      "y": 447,
+      "r": 9461,
+      "fv": 0
+    },
+    "Sentinel Locker": {
+      "hash": 1414496959,
+      "x": 345,
+      "y": 432,
+      "r": 16469,
+      "fv": 0
+    },
+    "Red Carpet": {
+      "hash": 1255200948,
+      "x": 439,
+      "y": 454,
+      "r": 8119,
+      "fv": 13
+    },
+    "Red Carpet": {
+      "hash": 1255200948,
+      "x": 380,
+      "y": 399,
+      "r": 40585,
+      "fv": 13
+    },
+    "Red Carpet": {
+      "hash": 1255200948,
+      "x": 364,
+      "y": 384,
+      "r": 7960,
+      "fv": 13
+    },
+    "Water Fog": {
+      "hash": 4246487176,
+      "x": 352,
+      "y": 372,
+      "r": 0,
+      "fv": 0
+    },
+    "Water Fog": {
+      "hash": 4246487176,
+      "x": 408,
+      "y": 425,
+      "r": 0,
+      "fv": 0
+    }
+  }
+}
