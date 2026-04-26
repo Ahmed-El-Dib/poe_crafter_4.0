@@ -38,6 +38,10 @@ def parse_map_mods(item_location) -> list:
 def read_map(description):
     lines = description.strip().split("\n")
 
+    # --- SAFETY CHECK ---
+    if not any("Item Class: Maps" in line for line in lines):
+        return None
+    
     stats = {
         "quantity": 0,
         "rarity": 0,
@@ -146,4 +150,5 @@ Travel to a Map of this tier or lower by using this in a personal Map Device. Ma
 
     """
 
-print(read_map(map_description))
+if __name__ == "__main__":
+    print(read_map(map_description))

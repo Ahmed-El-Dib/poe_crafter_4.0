@@ -95,28 +95,29 @@ def move_to_crafter(coords):
 # FIND ITEM IN GRID
 # -----------------------------
 
-def find_item(item_class, idx):
-    x0 = START_COORDS[0] + idx[0] * TILE_WIDTH
-    y0 = START_COORDS[1] + idx[1] * TILE_WIDTH
+# def find_item(item_class, idx):
+#     start_pos = idx[0] * 24 + idx[1]  # row-major: across row first
 
-    for col in range(24):
-        for row in range(24):
-            x = x0 + col * TILE_WIDTH
-            y = y0 + row * TILE_WIDTH
+#     for pos in range(start_pos, 24 * 24):
+#         row = pos // 24
+#         col = pos % 24
 
-            pyautogui.moveTo(x, y)
-            time.sleep(0.02)
+#         x = START_COORDS[0] + col * TILE_WIDTH
+#         y = START_COORDS[1] + row * TILE_WIDTH
 
-            text = copy_item()
-            if not text:
-                continue
+#         pyautogui.moveTo(x, y)
+#         time.sleep(0.02)
 
-            if ITEM_CLASS.lower() in text.lower():
-                print(f"Found {item_class} at ({x},{y})")
-                move_to_crafter((x, y))
-                return True
+#         text = copy_item()
+#         if not text:
+#             continue
 
-    return False
+#         if item_class.lower() in text.lower():
+#             print(f"Found {item_class} at idx ({row},{col}) ({x},{y})")
+#             move_to_crafter((x, y))
+#             return [row, col]
+
+#     return None
 
 
 def get_item(item_class, tab_image, idx):
@@ -204,6 +205,12 @@ def stop_spamming():
         pyautogui.keyUp('shift')
         spamming = False
 
+def tripple_slam():
+    use_currency(EXALT, spammable=True)
+    spam_currency(EXALT)
+    spam_currency(EXALT)
+    stop_spamming()
+
 def determine_next_action_map(map):
     # time.sleep(1)
     global spamming
@@ -213,6 +220,19 @@ def determine_next_action_map(map):
     num_mods = len(mods)
     print(stats)
 
+    if good_to_keep(mods, stats) and num_mods >= 6:
+        print("Perfect map found, keeping.")
+        stop_spamming()
+        return "DONE"
+
+    if good_to_keep(mods, stats):
+            print("Good map, keeping.")
+            stop_spamming()
+            if num_mods == 2:                 
+                use_currency(REGAL)
+            tripple_slam()
+
+    
     if num_mods == 0: # normal
         print("Normal map, using transmute.")
         stop_spamming()
@@ -236,13 +256,8 @@ def determine_next_action_map(map):
                 spamming = True
                 use_alt()
     else: # rare
-        if good_to_keep(mods, stats):
-            print("Good map, keeping.")
-            stop_spamming()
-            return "DONE"
-        else:
-            stop_spamming()
-            use_currency(SCOURE)
+        stop_spamming()
+        use_currency(SCOURE)
 
     return "CONTINUE"
 
@@ -252,48 +267,78 @@ def determine_next_action_map(map):
 # INDEX HANDLING
 # -----------------------------
 
+GRID_SIZE = 24
+
+def find_item(item_class, idx):
+    start_row, start_col = idx
+
+    # flatten in COLUMN-major order
+    start_pos = start_col * GRID_SIZE + start_row
+
+    for pos in range(start_pos, GRID_SIZE * GRID_SIZE):
+        col = pos // GRID_SIZE
+        row = pos % GRID_SIZE
+
+        x = START_COORDS[0] + col * TILE_WIDTH
+        y = START_COORDS[1] + row * TILE_WIDTH
+
+        pyautogui.moveTo(x, y)
+        time.sleep(0.02)
+
+        text = copy_item()
+        if not text:
+            continue
+
+        if item_class.lower() in text.lower():
+            print(f"Found {item_class} at idx ({row}, {col}) coords ({x}, {y})")
+            move_to_crafter((x, y))
+            return [row, col]
+
+    return None
+
 def advance_idx(idx):
-    idx[1] += 1
-    if idx[1] >= 24:
-        idx[1] = 0
-        idx[0] += 1
+    idx[0] += 1  # go down rows first
+
+    if idx[0] >= GRID_SIZE:
+        idx[0] = 0
+        idx[1] += 1  # then next column
+
     return idx
 
 
 def is_done(idx):
-    return idx[0] >= 24
+    return idx[1] >= GRID_SIZE
 
-
-# -----------------------------
-# MAIN LOOP
-# -----------------------------
 
 def main():
     focus_window("Path of Exile")
-
+    clear_crafting_area_and_move_to_tab(CRAFTING_TAB)
     idx = [0, 0]
     count = 0
-    while not is_done(idx):
-        print(f"Searching at idx {tuple(idx)}")
 
-        found = get_item(ITEM_CLASS, SRC_TAB, tuple(idx))
-        if not found:
-            print("No more items found. Stopping.")
+    while not is_done(idx):
+        print(f"Searching from idx {tuple(idx)}")
+
+        found_idx = get_item(ITEM_CLASS, SRC_TAB, tuple(idx))
+
+        if found_idx is None:
+            print("No more matching items found. Stopping.")
             break
 
-        # Craft loop
         while True:
-            map = parse_map_mods(CURRENCY_CRAFT_COORDS)
-            result = determine_next_action_map(map)
-        
+            map_mods = parse_map_mods(CURRENCY_CRAFT_COORDS)
+            result = determine_next_action_map(map_mods)
+
             if result == "DONE":
                 break
 
-        idx = advance_idx(idx)
-        count = count + 1
-        if count >60:
+        idx = advance_idx(found_idx)
+        count += 1
+
+        if count >= 60:
             print("Processed 60 maps, stopping to avoid long runtime.")
             break
+
     print("Finished all items.")
 
 
