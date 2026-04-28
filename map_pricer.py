@@ -68,8 +68,8 @@ def price_map(map):
             prices.append(99)
         else:
             prices.append(79)
-    if pack_size > 50:
-        prices.append(49)
+    if pack_size > 49:
+        prices.append(84)
     if pack_size > 40:
         prices.append(34)
 
@@ -149,7 +149,7 @@ def price_maps_in_stash():
 
 def price_maps_in_inventory(offset=None):
     # Inventory Grid Configuration
-    MIN_PRICE = 29
+    MIN_PRICE = 24
     INVENTORY_GRID_ROWS = 5
     INVENTORY_GRID_COLS = 12
     INVENTORY_GRID_START_X = 1292  # Starting X coordinate of the inventory grid
@@ -162,7 +162,8 @@ def price_maps_in_inventory(offset=None):
             y = INVENTORY_GRID_START_Y + row * INVENTORY_GRID_CELL_SIZE
             map = parse_map_mods((x, y))
             if map:
-                price = max(price_map(map) - offset, MIN_PRICE)
+                # price = max(price_map(map) - offset, MIN_PRICE)
+                price = price_map(map)
                 # print(price)
                 if price:
                     place_item_in_shop(x, y, price)
@@ -197,14 +198,14 @@ def place_item_in_shop(item_x, item_y, price):
     time.sleep(0.5)  # wait for the item to be listed
  
 
-def reprice(amount):
+def reprice(percent):
     # Inventory Grid Configuration
     INVENTORY_GRID_ROWS = 12
     INVENTORY_GRID_COLS = 12
     INVENTORY_GRID_START_X = 37  # Starting X coordinate of the inventory grid
     INVENTORY_GRID_START_Y = 189  # Starting Y coordinate of the inventory grid
     INVENTORY_GRID_CELL_SIZE = 50  # Size of each grid cell
-    MIN_PRICE = 29
+    MIN_PRICE = 24
 
     for col in range(INVENTORY_GRID_COLS):
         for row in range(INVENTORY_GRID_ROWS):
@@ -215,7 +216,7 @@ def reprice(amount):
             if map:
                 pyautogui.rightClick()
                 curent_price = copy_price_from_clipboard()
-                new_price = int(curent_price) - amount
+                new_price = int(int(curent_price) * (1 - percent / 100))
                 if new_price < MIN_PRICE:
                     print(f"Price for item at ({row}, {col}) is already at minimum. Skipping.")
                     pyautogui.typewrite(str(MIN_PRICE))
@@ -223,6 +224,7 @@ def reprice(amount):
                 else:
                     pyautogui.typewrite(str(new_price))
                     pyautogui.press('enter')
+
                 
 def copy_price_from_clipboard():
     pyperclip.copy('')
@@ -233,5 +235,5 @@ def copy_price_from_clipboard():
 
 if __name__ == "__main__":
     focus_window()
-    price_maps_in_inventory(7)
-    # reprice(7)
+    # price_maps_in_inventory(0)
+    reprice(35)
