@@ -335,7 +335,7 @@ def main():
         idx = advance_idx(found_idx)
         count += 1
 
-        if count >= 60:
+        if count >= 50:
             print("Processed 60 maps, stopping to avoid long runtime.")
             break
 

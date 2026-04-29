@@ -114,7 +114,7 @@ def price_map(map):
         if more_maps > 0 or more_scarabs > 0:
             prices.append(34)
 
-        return max(prices) if prices else None  
+        return max(prices) if prices else None
         
     if is_perfect_prefix(map) or is_perfect_suffix(map):
         prices.append(599)
@@ -128,7 +128,7 @@ STASH_GRID_ROWS = 12
 STASH_GRID_COLS = 12
 STASH_GRID_START_X = 24  # Starting X coordinate of the grid
 STASH_GRID_START_Y = 145  # Starting Y coordinate of the grid
-STASH_GRID_CELL_SIZE = 24 *2  # Size of each grid cell
+STASH_GRID_CELL_SIZE = 26 *2  # Size of each grid cell
 
 import time
 
@@ -154,7 +154,7 @@ def price_maps_in_inventory(offset=None):
     INVENTORY_GRID_COLS = 12
     INVENTORY_GRID_START_X = 1292  # Starting X coordinate of the inventory grid
     INVENTORY_GRID_START_Y = 612  # Starting Y coordinate of the inventory grid
-    INVENTORY_GRID_CELL_SIZE = 50  # Size of each grid cell
+    INVENTORY_GRID_CELL_SIZE = 54  # Size of each grid cell
 
     for col in range(INVENTORY_GRID_COLS):
         for row in range(INVENTORY_GRID_ROWS):
@@ -235,5 +235,5 @@ def copy_price_from_clipboard():
 
 if __name__ == "__main__":
     focus_window()
-    # price_maps_in_inventory(0)
-    reprice(35)
+    price_maps_in_inventory(0)
+    # reprice(25)
