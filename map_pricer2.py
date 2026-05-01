@@ -20,7 +20,8 @@ MAP_PREFIX_TARGETS = [
 # Force exit
 from pynput import keyboard
 import os
-
+MIN_PRICE = 24
+INFLATION = 30
 import pyperclip
 def on_press(key):
     global running
@@ -48,70 +49,90 @@ def is_perfect_prefix(map):
 
 def price_currency_map(more_currency, pack_size, quantity):
     price = 24 # base price for a map with no quantity, pack size, or more currency
+    extra_quant = max(0, (quantity - 80) // 2)
     if more_currency > 158:
         return 999  # too good to price
     if more_currency > 150: #mostly 158s
         if pack_size >= 50 or quantity >= 98:
+            price = 449
+        elif pack_size >= 40 or quantity >= 90:
             price = 369
-        if pack_size >= 40 or quantity >= 90:
-            price = 329
-        if pack_size >= 35 or quantity >= 84:
-            price = 299
+        elif pack_size >= 35 or quantity >= 84:
+            price = 319
         else:           
-            price = 229
-        return price
+            price = 249
+        
+        if pack_size >= 45 and quantity >= 80:
+            price = max(price, 699)
+        if pack_size >= 40 and quantity >= 80:
+            price = max(price, 599)
+        return price + extra_quant + int(INFLATION *1.25)
     elif more_currency > 130:
+        extra_quant = max(0, (quantity - 80) // 2)
         if pack_size >= 50 or quantity >= 98:
             price = 339
-        if pack_size >= 40 or quantity >= 90:
+        elif pack_size >= 40 or quantity >= 90:
             price = 279
-        if pack_size >= 35 or quantity >= 84:
+        elif pack_size >= 35 or quantity >= 84:
             price = 199
         else:           
             price = 169
-        return price
+        return price + extra_quant + int(INFLATION )
     elif more_currency > 120:
+        extra_quant = max(0, (quantity - 80) // 2)
         if pack_size >= 50 or quantity >= 98:
             price = 299
-        if pack_size >= 40 or quantity >= 90:
+        elif pack_size >= 40 or quantity >= 90:
             price = 249
-        if pack_size >= 35 or quantity >= 84:
+        elif pack_size >= 35 or quantity >= 84:
             price = 169
         else:           
             price = 129
-        return price
+        return price + extra_quant + int(INFLATION *0.75)
     elif more_currency >= 111:
+        extra_quant = max(0, (quantity - 80) // 2)
         if pack_size >= 50 or quantity >= 98:
             price = 299
-        if pack_size >= 40 or quantity >= 90:
+        elif pack_size >= 45 or quantity >= 90:
+            price = 199
+        elif pack_size >= 35 or quantity >= 90:
             price = 99
-        if pack_size >= 35 or quantity >= 84:
-            price = 59
-        if pack_size >= 30 and quantity >= 80:
-            price = 49
+        elif pack_size >= 35 or quantity >= 84:
+            price = 76
+        elif pack_size >= 30 and quantity >= 80:
+            price = 62
         else:           
             price = 34
-        return price
+        
+        return price + extra_quant + int(INFLATION *0.50)
 
     elif more_currency >= 90:
+        #special case for shit map - just send at min price
+        if pack_size < 30 and quantity < 80:
+            price = 24
+            return price
+        
+        extra_quant = max(0, (quantity - 80) // 2)
         if pack_size >= 50 or quantity >= 98:
             price = 119
-        if pack_size >= 40 or quantity >= 90:
+        elif pack_size >= 40 or quantity >= 90:
             price = 49
-        if pack_size >= 35 and quantity >= 84:
+        elif pack_size >= 35 and quantity >= 84:
             price = 39
-        if pack_size >= 30 and quantity >= 80:
+        elif pack_size >= 30 and quantity >= 80:
             price = 34
         else:           
             price = 24
-    return price
+        
+        
+    return price + extra_quant + int(INFLATION *0.1)
 
 def price_packsize_map(pack_size, quantity):
     price = 24 # base price for a map with no quantity, pack size, or more currency
     extra_quant = max(0, (quantity - 80) // 2)
     if pack_size >= 90:
         price = 449  # too good to price
-    if pack_size >= 84:
+    elif pack_size >= 84:
         price = 289 + extra_quant
     elif pack_size >= 80:
         price = 249 + extra_quant
@@ -131,10 +152,10 @@ def price_packsize_map(pack_size, quantity):
         price = 64 + extra_quant  
     elif pack_size >= 40:
         price = 34 + extra_quant
-    return price
+    return price + int(INFLATION *0.25)
 
 def price_other_map(more_maps, more_scarabs,more_currency, pack_size, quantity):
-    price = 24 # base price for a map with no quantity, pack size, or more currency
+    price = MIN_PRICE # base price for a map with no quantity, pack size, or more currency
     best_extra = max(more_maps, more_scarabs)
     if best_extra >= 100:
         if pack_size >= 40 or more_currency > 90 and quantity >= 80:
@@ -142,8 +163,8 @@ def price_other_map(more_maps, more_scarabs,more_currency, pack_size, quantity):
         elif pack_size > 30 or more_currency > 70 and quantity >= 80:
             price = 49
         else:
-            price = 24
-    return price
+            price = MIN_PRICE
+    return price + int(INFLATION *0.25)
 
 
 
@@ -190,7 +211,7 @@ def price_map(map):
     if other_price is not None:
         prices.append(other_price)
 
-    return max(prices) + 20 if prices else None
+    return max(prices) if prices else None
 
 # Stash Grid Configuration
 STASH_GRID_ROWS = 12
@@ -216,14 +237,16 @@ def price_maps_in_stash():
                 print(f"Map at ({row}, {col}) is priced at: {price}")
                 print(f"stats: {map.get('stats', {})}")
 
-def price_maps_in_inventory(offset=None):
+def price_maps_in_inventory(discount=None, discount_type="%"):
     # Inventory Grid Configuration
-    MIN_PRICE = 24
     INVENTORY_GRID_ROWS = 5
     INVENTORY_GRID_COLS = 12
     INVENTORY_GRID_START_X = 1292  # Starting X coordinate of the inventory grid
     INVENTORY_GRID_START_Y = 612  # Starting Y coordinate of the inventory grid
     INVENTORY_GRID_CELL_SIZE = 53  # Size of each grid cell
+
+    total_price = 0
+    priced_count = 0
 
     for col in range(INVENTORY_GRID_COLS):
         for row in range(INVENTORY_GRID_ROWS):
@@ -231,13 +254,22 @@ def price_maps_in_inventory(offset=None):
             y = INVENTORY_GRID_START_Y + row * INVENTORY_GRID_CELL_SIZE
             map = parse_map_mods((x, y))
             if map:
-                # price = max(price_map(map) - offset, MIN_PRICE)
-                price = price_map(map)
-                # print(price)
+                price = price_map(map) 
                 if price:
+                    price = get_discounted_price(price, discount, discount_type) if discount else price
+
+                    total_price += price
+                    priced_count += 1
+
                     print(f"Placing item at ({row}, {col}) with price: {price}")
                     place_item_in_shop(x, y, price)
             else:
+                if priced_count > 0:
+                    avg_price = total_price / priced_count
+                    print(f"Average price of processed items: {avg_price:.2f}")
+                else:
+                    print("No priced items to calculate average.")
+
                 print(f"No map found at ({row}, {col}).")
                 exit()
                 
@@ -268,15 +300,14 @@ def place_item_in_shop(item_x, item_y, price):
     time.sleep(0.5)  # wait for the item to be listed
  
 
-def reprice(percent):
+def reprice(amount, discount_type="%"):
     # Inventory Grid Configuration
-    INVENTORY_GRID_ROWS = 13
-    INVENTORY_GRID_COLS = 13
+    INVENTORY_GRID_ROWS = 12
+    INVENTORY_GRID_COLS = 12
     INVENTORY_GRID_START_X = 37  # Starting X coordinate of the inventory grid
     INVENTORY_GRID_START_Y = 189  # Starting Y coordinate of the inventory grid
-    INVENTORY_GRID_CELL_SIZE = 50  # Size of each grid cell
-    MIN_PRICE = 24
-
+    INVENTORY_GRID_CELL_SIZE = 53  # Size of each grid cell
+ 
     for col in range(INVENTORY_GRID_COLS):
         for row in range(INVENTORY_GRID_ROWS):
             x = INVENTORY_GRID_START_X + col * INVENTORY_GRID_CELL_SIZE
@@ -286,8 +317,7 @@ def reprice(percent):
             if map:
                 pyautogui.rightClick()
                 curent_price = copy_price_from_clipboard()
-                # new_price = int(int(curent_price) * (1 - percent / 100))
-                new_price = int(int(curent_price) - percent)
+                new_price = get_discounted_price(int(curent_price), amount, discount_type)
                 if new_price < MIN_PRICE:
                     print(f"Price for item at ({row}, {col}) is already at minimum. Skipping.")
                     pyautogui.typewrite(str(MIN_PRICE))
@@ -296,7 +326,13 @@ def reprice(percent):
                     pyautogui.typewrite(str(new_price))
                     pyautogui.press('enter')
 
-                
+def get_discounted_price(current_price, amt, discount_type="%"):
+    if discount_type == "%":
+        new_price = int(current_price * (1 - amt / 100))
+    else:
+        new_price = current_price - amt
+    return int(max(new_price, MIN_PRICE))  # Ensure price doesn't go below MIN_PRICE
+
 def copy_price_from_clipboard():
     pyperclip.copy('')
     pyautogui.hotkey('ctrl', 'c')
@@ -306,5 +342,5 @@ def copy_price_from_clipboard():
 
 if __name__ == "__main__":
     focus_window()
-    # price_maps_in_inventory(0)
-    reprice(25)
+    price_maps_in_inventory(discount=None, discount_type="%")
+    # reprice(10, discount_type="%")    

@@ -92,6 +92,11 @@ def parse_item_mods(item_location) -> list:
     description = copy_item()  # assumes this returns full clipboard text
     return read_item(description)
     
+def parse_deli_orb(item_location) -> dict:
+    mouse.move(coords=item_location)
+    # time.sleep(0.05)  # small delay for tooltip
+    description = copy_item()  # assumes this returns full clipboard text
+    return read_deli_orb(description)
 
 def read_item(description):
     mods = []
@@ -162,6 +167,36 @@ def read_item(description):
     
     return mods
 
+import re
+
+def read_deli_orb(description):
+    lines = [line.strip() for line in description.strip().splitlines()]
+
+    # Only return if this is a Delirium Orb
+    orb_name = next((line for line in lines if "Delirium Orb" in line), None)
+    if not orb_name:
+        return None
+
+    # Stack Size: 10/10
+    stack = None
+    stack_max = None
+    for line in lines:
+        match = re.search(r"Stack Size:\s*(\d+)\s*/\s*(\d+)", line)
+        if match:
+            stack = int(match.group(1))
+            stack_max = int(match.group(2))
+            break
+
+    # Jeweller's Delirium Orb -> Jeweller's
+    orb_type = re.sub(r"\s+Delirium Orb$", "", orb_name).strip()
+
+    return {
+        "type": orb_type,
+        "stack": stack,
+        "stack_max": stack_max,
+        "name": orb_name
+    }
+
 item = """
 Item Class: Jewels
 Rarity: Rare
@@ -194,5 +229,19 @@ Place into an allocated Medium or Large Jewel Socket on the Passive Skill Tree. 
 
 """
 
-print(read_item(item))
+deli_orb = """
+Item Class: Stackable Currency
+Rarity: Currency
+Diviner's Delirium Orb
+--------
+Stack Size: 10/10
+--------
+Modifies a Map item adding layers of Delirium with the Divination Cards reward type
+--------
+Right click this item then left click a Map item to apply it. Can apply up to 5 to a single Map item.
+Shift click to unstack.
+
+"""
+# print(read_item(item))
+print(read_deli_orb(deli_orb))
 

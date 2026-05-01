@@ -189,10 +189,10 @@ def good_to_aug(mods, stats):
     return  len(mods)== 1 and (stats.get("more_currency", 0) >= 40 or stats.get("more_scarabs", 0) >= 30 or stats.get("pack_size", 0) >= 20)
 
 def double_currency(stats):    return stats.get("more_currency", 0) >= 90
-def double_pack_size(stats):    return stats.get("pack_size", 0) >= 40
-def currency_and_pack_size(stats):    return stats.get("more_currency", 0) + stats.get("pack_size", 0) >= 65
+def double_pack_size(stats):    return stats.get("pack_size", 0) >= 35
+def currency_and_pack_size(stats):    return stats.get("more_currency", 0) >40 and stats.get("pack_size", 0) >= 20
 def good_to_regal(mods, stats):
-    return len(mods) == 2 and (has_valdos(mods) or has_antagonists(mods) or double_currency(stats) or double_pack_size(stats) or currency_and_pack_size(stats))
+    return len(mods) == 2 and (double_currency(stats) or double_pack_size(stats))
 
 def good_to_keep(mods, stats):
     good_p = count_prefix_targets(mods) > 1
@@ -201,9 +201,8 @@ def good_to_keep(mods, stats):
 
 def stop_spamming():
     global spamming
-    if spamming:
-        pyautogui.keyUp('shift')
-        spamming = False
+    pyautogui.keyUp('shift')
+    spamming = False
 
 def tripple_slam():
     use_currency(EXALT, spammable=True)
@@ -220,18 +219,18 @@ def determine_next_action_map(map):
     num_mods = len(mods)
     print(stats)
 
-    if good_to_keep(mods, stats) and num_mods >= 6:
+    if good_to_keep(mods, stats) and num_mods == 6:
         print("Perfect map found, keeping.")
         stop_spamming()
         return "DONE"
 
     if good_to_keep(mods, stats):
-            print("Good map, keeping.")
-            stop_spamming()
-            if num_mods == 2:                 
-                use_currency(REGAL)
-            tripple_slam()
-
+        print("Good map, keeping.")
+        stop_spamming()
+        if num_mods == 2:                 
+            use_currency(REGAL)
+        tripple_slam()
+        return "DONE"
     
     if num_mods == 0: # normal
         print("Normal map, using transmute.")
@@ -335,7 +334,7 @@ def main():
         idx = advance_idx(found_idx)
         count += 1
 
-        if count >= 50:
+        if count >= 60:
             print("Processed 60 maps, stopping to avoid long runtime.")
             break
 

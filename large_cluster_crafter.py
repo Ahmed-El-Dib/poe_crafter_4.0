@@ -9,6 +9,7 @@ from images.image_utils import locate_center
 from images.img_paths import *
 from config import *
 from focus_window import focus_window
+import winsound
 
 
 # -----------------------------
@@ -393,6 +394,7 @@ def main():
             result = determine_action_clusters(mods)
         
             if result == "DONE":
+                winsound.Beep(1000, 300)  # frequency (Hz), duration (ms)
                 break
 
         idx = advance_idx(idx)
