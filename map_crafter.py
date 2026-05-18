@@ -14,28 +14,15 @@ from focus_window import focus_window
 # -----------------------------
 # CONFIG
 # -----------------------------
-START_COORDS = (28, 147)
-TILE_WIDTH = 26
-focus_window("Path of Exile")
-time.sleep(1)
+
+
 ITEM_CLASS = "Map"
 CRAFTING_TAB = CURRENCY_TAB  # change if needed
-CRAFTING_TAB_COORDS = locate_center(CURRENCY_TAB, confidence=0.8)
+CRAFTING_TAB_COORDS = locate_center(CURRENCY_TAB, confidence=0.7)
 SRC_TAB = SOURCE_TAB_LAPOP  # change if needed
 
 
-# Force exit
-from pynput import keyboard
-import os
-def on_press(key):
-    global running
-    if key == keyboard.Key.esc:
-        pyautogui.keyUp('shift')
-        print("Stopping...")
-        os._exit(0)
-
-listener = keyboard.Listener(on_press=on_press)
-listener.start()
+from utils.initiate_session import requires_game_ready
 
 
 MAP_SUFFIX_TARGETS = [
@@ -55,75 +42,6 @@ MAP_PREFIX_TARGETS = [
     "Stalwart",
     "Valdo's",
 ]
-# -----------------------------
-# STASH NAVIGATION
-# -----------------------------
-
-def clear_crafting_area_and_move_to_tab(tab_image):
-
-    pyautogui.moveTo(*CRAFTING_TAB_COORDS)
-    pyautogui.leftClick()
-    pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
-    pyautogui.keyDown('ctrl')
-    pyautogui.leftClick()
-    pyautogui.keyUp('ctrl')
-
-    tab_coords = locate_center(tab_image, confidence=0.8)
-    if not tab_coords:
-        raise RuntimeError("Tab not found")
-
-    pyautogui.moveTo(*tab_coords)
-    pyautogui.click()
-
-
-def move_to_crafter(coords):
-    pyautogui.moveTo(*coords)
-    pyautogui.click()
-
-    tab_coords = locate_center(CURRENCY_TAB, confidence=0.8)
-    if not tab_coords:
-        raise RuntimeError("Currency tab not found")
-
-    pyautogui.moveTo(*tab_coords)
-    pyautogui.click()
-
-    pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
-    pyautogui.click()
-
-
-# -----------------------------
-# FIND ITEM IN GRID
-# -----------------------------
-
-# def find_item(item_class, idx):
-#     start_pos = idx[0] * 24 + idx[1]  # row-major: across row first
-
-#     for pos in range(start_pos, 24 * 24):
-#         row = pos // 24
-#         col = pos % 24
-
-#         x = START_COORDS[0] + col * TILE_WIDTH
-#         y = START_COORDS[1] + row * TILE_WIDTH
-
-#         pyautogui.moveTo(x, y)
-#         time.sleep(0.02)
-
-#         text = copy_item()
-#         if not text:
-#             continue
-
-#         if item_class.lower() in text.lower():
-#             print(f"Found {item_class} at idx ({row},{col}) ({x},{y})")
-#             move_to_crafter((x, y))
-#             return [row, col]
-
-#     return None
-
-
-def get_item(item_class, tab_image, idx):
-    clear_crafting_area_and_move_to_tab(tab_image)
-    return find_item(item_class, idx)
-
 
 # -----------------------------
 # TARGET LOGIC
@@ -189,7 +107,7 @@ def good_to_aug(mods, stats):
     return  len(mods)== 1 and (stats.get("more_currency", 0) >= 40 or stats.get("more_scarabs", 0) >= 30 or stats.get("pack_size", 0) >= 20)
 
 def double_currency(stats):    return stats.get("more_currency", 0) >= 90
-def double_pack_size(stats):    return stats.get("pack_size", 0) >= 35
+def double_pack_size(stats):    return stats.get("pack_size", 0) >= 40
 def currency_and_pack_size(stats):    return stats.get("more_currency", 0) >40 and stats.get("pack_size", 0) >= 20
 def good_to_regal(mods, stats):
     return len(mods) == 2 and (double_currency(stats) or double_pack_size(stats))
@@ -261,13 +179,44 @@ def determine_next_action_map(map):
     return "CONTINUE"
 
     
+# -----------------------------
+# STASH NAVIGATION
+# -----------------------------
 
-# -----------------------------
-# INDEX HANDLING
-# -----------------------------
+def clear_crafting_area_and_move_to_tab(tab_image):
+
+    pyautogui.moveTo(*CRAFTING_TAB_COORDS)
+    pyautogui.leftClick()
+    pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
+    pyautogui.keyDown('ctrl')
+    pyautogui.leftClick()
+    pyautogui.keyUp('ctrl')
+
+    tab_coords = locate_center(tab_image, confidence=0.8)
+    if not tab_coords:
+        raise RuntimeError("Tab not found")
+
+    pyautogui.moveTo(*tab_coords)
+    pyautogui.click()
+
+
+def move_to_crafter(coords):
+    pyautogui.moveTo(*coords)
+    pyautogui.click()
+
+    tab_coords = locate_center(CURRENCY_TAB, confidence=0.8)
+    if not tab_coords:
+        raise RuntimeError("Currency tab not found")
+
+    pyautogui.moveTo(*tab_coords)
+    pyautogui.click()
+
+    pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
+    pyautogui.click()
 
 GRID_SIZE = 24
-
+START_COORDS = (28, 147)
+TILE_WIDTH = 26
 def find_item(item_class, idx):
     start_row, start_col = idx
 
@@ -294,6 +243,17 @@ def find_item(item_class, idx):
             return [row, col]
 
     return None
+
+def get_item(item_class, tab_image, idx):
+    clear_crafting_area_and_move_to_tab(tab_image)
+    return find_item(item_class, idx)
+
+
+# -----------------------------
+# INDEX HANDLING
+# -----------------------------
+
+
 
 def advance_idx(idx):
     idx[0] += 1  # go down rows first

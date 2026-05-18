@@ -20,19 +20,24 @@ def copy_item():
 
     return pyperclip.paste()
 
-def parse_map_mods(item_location) -> list:
+def parse_map_mods(item_location):
     """
     Parse a map description and extract mods with full text.
-    
+
     Args:
         item_location (tuple): (x, y) coordinates to hover for tooltip
-    
+
     Returns:
-        list: List of dictionaries with mod info, including full text
+        List of dictionaries with mod info, including full text
     """
     mouse.move(coords=item_location)
-    # time.sleep(0.05)  # small delay for tooltip
-    description = copy_item()  # assumes this returns full clipboard text
+
+    description = copy_item()
+
+    if not description:
+        print("Failed to copy item description.")
+        return None
+
     return read_map(description)
 
 def read_map(description):
@@ -52,6 +57,9 @@ def read_map(description):
     }
 
     mods = []
+
+    price = None
+    currency = None
 
     i = 0
     while i < len(lines):
@@ -112,39 +120,74 @@ def read_map(description):
         else:
             i += 1
 
-    return {
-        "stats": stats,
-        "mods": mods
+        # --- Extract price note ---
+        price_match = re.search(
+            r'^Note:\s*~b/o\s+(\d+(?:\.\d+)?)\s+(\w+)',
+            line,
+            re.IGNORECASE
+        )
+
+        if price_match:
+            price = float(price_match.group(1))
+            currency = price_match.group(2).lower()
+            i += 1
+            continue
+
+    result = {
+    "stats": stats,
+    "mods": mods
     }
+
+    if price is not None and currency is not None:
+        result["price"] = price
+        result["currency"] = currency
+
+    return result
 
 map_description = """
 Item Class: Maps
 Rarity: Rare
-Death Artifice
+Whispering Gambit
 Map (Tier 16)
 --------
-Item Quantity: +39% (augmented)
-Item Rarity: +24% (augmented)
-Monster Pack Size: +27% (augmented)
-More Currency: +47% (augmented)
+Item Quantity: +113% (augmented)
+Item Rarity: +67% (augmented)
+Monster Pack Size: +43% (augmented)
 --------
-Item Level: 84
+Item Level: 83
 --------
 Monster Level: 83
 --------
 { Implicit Modifier }
-Area is Influenced by the Originator's Memories — Unscalable Value
+Map contains Drox's Citadel
+Item Quantity increases amount of Rewards Drox drops by 20% of its value — Unscalable Value
 --------
-{ Prefix Modifier "Punishing" (Tier: 1) }
-Monsters reflect 20% of Physical Damage
-Monsters reflect 20% of Elemental Damage
-{ Suffix Modifier "of Persistence" (Tier: 1) }
-Rare monsters in area Temporarily Revive on death
-{ Suffix Modifier "of Temporal Chains" — Caster, Curse }
-Players are Cursed with Temporal Chains
-(Temporal Chains is a Hex which reduces Action Speed by 15%, or 9% on Rare or Unique targets, and makes other effects on the target expire 40% slower. It has 50% less effect on Players and lasts 5 seconds)
+{ Prefix Modifier "Unwavering" (Tier: 1) — Life }
+26(25-30)% more Monster Life
+Monsters cannot be Stunned — Unscalable Value
+{ Prefix Modifier "Chaining" (Tier: 1) }
+Monsters' skills Chain 2 additional times
+{ Prefix Modifier "Antagonist's" (Tier: 1) }
+22(20-30)% increased number of Rare Monsters
+{ Prefix Modifier "Fecund" (Tier: 1) — Life }
+46(40-49)% more Monster Life
+{ Suffix Modifier "of Stasis" (Tier: 1) — Life, Mana, Defences, Energy Shield }
+Players cannot Regenerate Life, Mana or Energy Shield — Unscalable Value
+{ Suffix Modifier "of Vulnerability" (Tier: 1) — Caster, Curse }
+Players are Cursed with Vulnerability
+(Vulnerability is a Hex which increases Physical Damage taken by 15% and causes Hits to have +25% chance to inflict Bleeding on the target. It lasts 8 seconds)
+{ Suffix Modifier "of Ice" (Tier: 1) }
+Area has patches of Chilled Ground
+(You are Chilled while standing in Chilled Ground)
+{ Suffix Modifier "of Exposure" (Tier: 1) — Elemental, Resistance }
+Players have -12(-12--9)% to all maximum Resistances
 --------
 Travel to a Map of this tier or lower by using this in a personal Map Device. Maps can only be used once. 
+--------
+Corrupted
+--------
+Note: ~b/o 22 chaos
+
 
 
 

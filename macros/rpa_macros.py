@@ -1,119 +1,181 @@
-from pywinauto.keyboard import send_keys
 import time
-from pywinauto import mouse
-import pywinauto
+from pathlib import Path
+from typing import Optional, Tuple
 
-import mss, pyautogui
-from PIL import Image
+import pyautogui
 
 from config import CURRENCY_CRAFT_COORDS
 
-def send(sequence: str, pause: float = 0.2, *, literal: bool = False, with_spc=True) -> None:
+
+Coords = Tuple[int, int]
+
+# Global baseline delay after every PyAutoGUI call
+pyautogui.PAUSE = 0.05
+
+
+def wait(extra: float = 0.0) -> None:
+    if extra > 0:
+        time.sleep(extra)
+
+
+def send(text: str, extra_pause: float = 0.0) -> None:
     """
-    literal=True  → treat sequence as literal text
-    literal=False → treat sequence as SendKeys syntax
+    Type literal text.
+    """
+    pyautogui.write(text, interval=0)
+    wait(extra_pause)
+
+
+def hotkey(*keys: str, extra_pause: float = 0.0) -> None:
+    """
+    Press a hotkey combo.
+    """
+    pyautogui.hotkey(*keys)
+    wait(extra_pause)
+
+
+def press(key: str, times: int = 1, extra_pause: float = 0.0) -> None:
+    """
+    Press a key multiple times.
+    """
+    pyautogui.press(key, presses=times, interval=0)
+    wait(extra_pause)
+
+
+def key_down_shift(extra_pause: float = 0.0) -> None:
+    pyautogui.keyDown("shift")
+    wait(extra_pause)
+
+
+def key_up_shift(extra_pause: float = 0.0) -> None:
+    pyautogui.keyUp("shift")
+    wait(extra_pause)
+
+def ctrl_alt_click(coords: Coords, extra_pause: float = 0.0, button: str = "left") -> None:
+    """
+    Ctrl + Alt + click.
+    """
+    pyautogui.keyDown("ctrl")
+    pyautogui.keyDown("alt")
+    try:
+        pyautogui.moveTo(x=coords[0], y=coords[1],duration=0.1)
+        pyautogui.click(x=coords[0], y=coords[1], button=button,interval=0.1)
+    finally:
+        pyautogui.keyUp("ctrl")
+        pyautogui.keyUp("alt")
+
+    wait(extra_pause)
+
+def click(coords: Coords, extra_pause: float = 0.0, button: str = "left", confidence: float = 0.8, duration=0.1) -> None:
+    """
+    Mouse click.
+    """
+    pyautogui.moveTo(x=coords[0], y=coords[1],duration=duration)
+    pyautogui.click(x=coords[0], y=coords[1], button=button,interval=duration)
+    wait(extra_pause)
+
+from typing import Optional, Iterable
+
+def modified_click(
+    coords: Coords,
+    hotkeys: Optional[Iterable[str]] = None,
+    button: str = "left",
+    clicks: int = 1,
+    move_duration: float = 0.1,
+    click_interval: float = 0.1,
+    extra_pause: float = 0.0,
+) -> None:
+    """
+    Click with optional modifier keys.
+
+    Examples:
+        modified_click(coords)
+        modified_click(coords, hotkeys=["ctrl"])
+        modified_click(coords, hotkeys=["shift", "ctrl"])
+        modified_click(coords, button="right")
     """
 
-    seq = sequence
+    hotkeys = list(hotkeys or [])
 
-    if literal:
-        # Escape ALL SendKeys metacharacters
-        replacements = {
-            "+": "{+}",
-            "%": "{%}",
-            "^": "{^}",
-            "~": "{~}",
-        }
-        for k, v in replacements.items():
-            seq = seq.replace(k, v)
+    for key in hotkeys:
+        pyautogui.keyDown(key)
 
-    send_keys(seq, with_spaces=with_spc)
+    try:
+        pyautogui.moveTo(
+            x=coords[0],
+            y=coords[1],
+            duration=move_duration
+        )
 
-    if pause and pause > 0:
-        time.sleep(pause)
+        pyautogui.click(
+            x=coords[0],
+            y=coords[1],
+            button=button,
+            clicks=clicks,
+            interval=click_interval
+        )
 
+    finally:
+        for key in reversed(hotkeys):
+            pyautogui.keyUp(key)
 
-def press(sequence: str, times: int = 1, pause: float = 0.1):
+    wait(extra_pause)
+
+def ctrl_click(coords: Coords, extra_pause: float = 0.0, button: str = "left") -> None:
     """
-    Press a pywinauto key sequence N times.
-    Example sequences:
-        '{TAB}'
-        '+{TAB}'
-        '{DOWN}'
-        '{UP}'
-        '{ENTER}'
-        '^c'
+    Ctrl + click.
     """
-    for _ in range(times):
-        send(sequence, pause=pause)
+    pyautogui.keyDown("ctrl")
+    try:
+        pyautogui.moveTo(x=coords[0], y=coords[1],duration=0.1)
+        pyautogui.click(x=coords[0], y=coords[1], button=button,interval=0.1)
+    finally:
+        pyautogui.keyUp("ctrl")
 
-def key_down_shift() -> None:
-    send_keys("{VK_LSHIFT down}", pause=0.1)
+    wait(extra_pause)
 
-def key_up_shift() -> None:
-    send_keys("{VK_LSHIFT up}", pause=0.1)
-
-def click(coords: tuple, pause: float = 0, button: str = "left"):
+def move_mouse_from_view():
+    pyautogui.moveTo(200, 1900)
+    
+from images.image_utils import locate_center
+def click_image(
+    image_path: str | Path,
+    confidence: float = 0.9,
+    extra_pause: float = 0.0,
+    button: str = "left",
+    grayscale: bool = True,
+) -> bool:
     """
-    Basic mouse click primitive.
-
-    coords: (x, y) tuple on the screen
-    pause:  delay after click
-    clicks: number of clicks (1=single, 2=double)
-    button: 'left' or 'right'
+    Locate and click image.
     """
-    pyautogui.moveTo(coords[0], coords[1],duration=0.01  )
-    mouse.click(coords=coords, button=button)
-    if pause > 0:
-        time.sleep(pause)
+    coords = locate_center(
+        image_path,
+        confidence=confidence,
+    )
 
-def ctrl_click(coords: tuple, pause: float = 0.1, button: str = "left"):
+    if coords is None:
+        return False
+
+    click(coords, extra_pause=extra_pause, button=button)
+    return True
+
+def ctrl_alt_click_image(
+    image_path: str | Path,
+    confidence: float = 0.9,
+    extra_pause: float = 0.0,
+    button: str = "left",
+    grayscale: bool = True,
+) -> bool:
     """
-    Ctrl + mouse click primitive.
-
-    coords: (x, y) tuple on the screen
-    pause:  delay after click
-    clicks: number of clicks (1=single, 2=double)
-    button: 'left' or 'right'
+    Locate and Ctrl + Alt + click image.
     """
-    with pywinauto.keyboard.KeyAction("ctrl"):
-        mouse.click(coords=coords, button=button)
-        if pause > 0:
-            time.sleep(pause)
+    coords = locate_center(
+        image_path,
+        confidence=confidence,
+    )
 
-def locate_center(image_path, confidence=0.9):
-    """
-    Returns (x, y) center of image OR None.
-    """
-    template = Image.open(image_path)
+    if coords is None:
+        return False
 
-    with mss.mss() as sct:
-        for mon in sct.monitors[1:]:
-            scr = sct.grab(mon)
-            screenshot = Image.frombytes("RGB", (mon["width"], mon["height"]), scr.rgb)
-
-            try:
-                loc = pyautogui.locate(template, screenshot, confidence=confidence)
-            except Exception:
-                loc = None
-
-            if loc:
-                cx = mon["left"] + loc.left + loc.width // 2
-                cy = mon["top"] + loc.top + loc.height // 2
-                return (cx, cy)
-
-    return None
-
-def click_image(image_path, confidence=0.9, pause=0.2, button="left"):
-    """
-    Locate an image on the screen and click its center.
-    Returns True if found and clicked, False otherwise.
-    """
-    coords = locate_center(image_path, confidence)
-    if coords:
-        click(coords, pause=pause, button=button)
-        return True
-    return False
-
-
-
+    ctrl_alt_click(coords, extra_pause=extra_pause, button=button)
+    return True

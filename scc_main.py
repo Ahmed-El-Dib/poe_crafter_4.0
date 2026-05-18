@@ -1,0 +1,3 @@
+from crafters.small_cluster_crafter import craft_small_clusters_batch
+
+craft_small_clusters_batch(item_class="Medium Cluster")

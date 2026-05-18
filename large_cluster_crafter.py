@@ -78,7 +78,7 @@ VALUABLE_COMBOS = [
     # ("Surefooted Striker", "Fuel the Fight", "Smite the Weak"),
     # ("Calamitous", "Fuel the Fight", "Martial Prowess"),
     # ("Calamitous", "Fuel the Fight", "Heavy Hitter"),
-    ("Calamitous", "Fuel the Fight", "Smite the Weak"),
+    # ("Calamitous", "Fuel the Fight", "Smite the Weak"),
     # ("feed the fury", "Fuel the Fight", "Heavy Hitter"),
     ("feed the fury", "Fuel the Fight", "martial prowess"),
     # ("feed the fury", "Fuel the Fight", "Smite the weak"),
@@ -377,7 +377,7 @@ def is_done(idx):
 
 def main():
     focus_window("Path of Exile")
-
+    pyautogui.PAUSE = 0.05
     idx = [0, 0]
 
     while not is_done(idx):

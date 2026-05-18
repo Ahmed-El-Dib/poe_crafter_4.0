@@ -76,6 +76,11 @@ def parse_cluster_mods(item_location) -> list:
     print(f"Parsed mods: {mods}")
     return mods
 
+def parse_deli_orb(item_location) -> dict:
+    mouse.move(coords=item_location)
+    # time.sleep(0.05)  # small delay for tooltip
+    description = copy_item()  # assumes this returns full clipboard text
+    return read_deli_orb(description)
 
 def parse_item_mods(item_location) -> list:
     """
@@ -92,11 +97,7 @@ def parse_item_mods(item_location) -> list:
     description = copy_item()  # assumes this returns full clipboard text
     return read_item(description)
     
-def parse_deli_orb(item_location) -> dict:
-    mouse.move(coords=item_location)
-    # time.sleep(0.05)  # small delay for tooltip
-    description = copy_item()  # assumes this returns full clipboard text
-    return read_deli_orb(description)
+
 
 def read_item(description):
     mods = []
@@ -242,6 +243,6 @@ Right click this item then left click a Map item to apply it. Can apply up to 5 
 Shift click to unstack.
 
 """
-# print(read_item(item))
-print(read_deli_orb(deli_orb))
+print(read_item(item))
+# print(read_deli_orb(deli_orb))
 

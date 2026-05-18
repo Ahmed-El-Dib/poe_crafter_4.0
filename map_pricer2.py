@@ -21,7 +21,7 @@ MAP_PREFIX_TARGETS = [
 from pynput import keyboard
 import os
 MIN_PRICE = 24
-INFLATION = 30
+INFLATION = 0
 import pyperclip
 def on_press(key):
     global running
@@ -300,37 +300,80 @@ def place_item_in_shop(item_x, item_y, price):
     time.sleep(0.5)  # wait for the item to be listed
  
 
-def reprice(amount, discount_type="%"):
+def reprice(
+    amount: int,
+    discount_type: str = "%",
+    Q: int | None = None,  # quantity threshold
+    P: int | None = None,  # pack size threshold
+    M: int | None = None,  # more maps threshold
+    C: int | None = None,  # more currency threshold
+    S: int | None = None,  # more scarabs threshold
+):
     # Inventory Grid Configuration
     INVENTORY_GRID_ROWS = 12
     INVENTORY_GRID_COLS = 12
-    INVENTORY_GRID_START_X = 37  # Starting X coordinate of the inventory grid
-    INVENTORY_GRID_START_Y = 189  # Starting Y coordinate of the inventory grid
-    INVENTORY_GRID_CELL_SIZE = 53  # Size of each grid cell
- 
+    INVENTORY_GRID_START_X = 37
+    INVENTORY_GRID_START_Y = 189
+    INVENTORY_GRID_CELL_SIZE = 53
+
     for col in range(INVENTORY_GRID_COLS):
         for row in range(INVENTORY_GRID_ROWS):
             x = INVENTORY_GRID_START_X + col * INVENTORY_GRID_CELL_SIZE
             y = INVENTORY_GRID_START_Y + row * INVENTORY_GRID_CELL_SIZE
+
             pyautogui.moveTo(x, y)
+
             map = parse_map_mods((x, y))
+
             if map:
+                stats = map.get("stats", {})
+
+                quantity = stats.get("quantity", 0)
+                pack_size = stats.get("pack_size", 0)
+                more_maps = stats.get("more_maps", 0)
+                more_currency = stats.get("more_currency", 0)
+                more_scarabs = stats.get("more_scarabs", 0)
+
+                if Q is not None and quantity >= Q:
+                    print(f"Skipping ({row}, {col}) - Q {quantity} >= {Q}")
+                    continue
+
+                if P is not None and pack_size >= P:
+                    print(f"Skipping ({row}, {col}) - P {pack_size} >= {P}")
+                    continue
+
+                if M is not None and more_maps >= M:
+                    print(f"Skipping ({row}, {col}) - M {more_maps} >= {M}")
+                    continue
+
+                if C is not None and more_currency >= C:
+                    print(f"Skipping ({row}, {col}) - C {more_currency} >= {C}")
+                    continue
+
+                if S is not None and more_scarabs >= S:
+                    print(f"Skipping ({row}, {col}) - S {more_scarabs} >= {S}")
+                    continue
+
                 pyautogui.rightClick()
+
                 curent_price = copy_price_from_clipboard()
                 new_price = get_discounted_price(int(curent_price), amount, discount_type)
+
                 if new_price < MIN_PRICE:
                     print(f"Price for item at ({row}, {col}) is already at minimum. Skipping.")
                     pyautogui.typewrite(str(MIN_PRICE))
-                    pyautogui.press('enter')
+                    pyautogui.press("enter")
                 else:
-                    pyautogui.typewrite(str(new_price))
-                    pyautogui.press('enter')
+                    pyautogui.typewrite(str(new_price),0.05)
+                    pyautogui.press("enter")
 
 def get_discounted_price(current_price, amt, discount_type="%"):
     if discount_type == "%":
         new_price = int(current_price * (1 - amt / 100))
     else:
         new_price = current_price - amt
+        if new_price > 999:
+            new_price = 999
     return int(max(new_price, MIN_PRICE))  # Ensure price doesn't go below MIN_PRICE
 
 def copy_price_from_clipboard():
@@ -339,8 +382,19 @@ def copy_price_from_clipboard():
     time.sleep(0.1)
     return pyperclip.paste()
 
-
+from shop.shop_utils import open_shop_tab
+from shop.shop_tab import collect_earnings
+from images.img_paths import SHOP_TAB_1, SHOP_TAB_2, SHOP_TAB_3, SHOP_TAB_4, SHOP_TAB_5
 if __name__ == "__main__":
     focus_window()
-    price_maps_in_inventory(discount=None, discount_type="%")
-    # reprice(10, discount_type="%")    
+    #SHOP_TAB_2,SHOP_TAB_3, SHOP_TAB_4, 
+    shops = [ SHOP_TAB_2]
+    # collect_earnings()
+    for shop in shops:
+        if open_shop_tab(shop):
+            print(f"Opened shop tab successfully.")
+            reprice(30, discount_type="%")    
+        else:
+            print(f"Failed to open shop tab.")
+    # price_maps_in_inventory(discount=30, discount_type="%",)
+   

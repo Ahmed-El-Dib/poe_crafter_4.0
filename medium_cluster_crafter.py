@@ -1,149 +1,142 @@
-import pyautogui
-import time
-
-from macros.currency_macros import *
-from macros.item_parser import parse_cluster_mods, copy_item
-from images.image_utils import locate_center
 from images.img_paths import *
-from config import *
-from focus_window import focus_window
+from stash.tabs.grid_tab import GridStashTab
+from stash.tabs.currency_tab import CurrencyTab
+from utils.initiate_session import requires_game_ready
+from macros.item_parser import parse_cluster_mods
+import time
+from stash.stash_utils import crafting_safe_retry
 
-
-# -----------------------------
-# CONFIG
-# -----------------------------
-START_COORDS = (28, 147)
-TILE_WIDTH = 26
-
-ITEM_CLASS = "Cluster Jewels"
-CRAFTING_TAB = CURRENCY_TAB  # change if needed
-CRAFTING_TAB_COORDS = locate_center(CURRENCY_TAB, confidence=0.8)
-SRC_TAB = SOURCE_TAB  # change if needed
 
 CLUSTER_TARGETS = [
-    "Towering Threat",
-    "Assert Dominance",
-    # "Vast Power",
+    "Abecedarian's",
+    "Dabbler's",
+    "Alchemist's",
+    "of Incision",
 ]
 
 VALUABLE_COMBOS = [
-    ("Towering Threat", "Assert Dominance"),
-    # ("Vast Power", "Assert Dominance"),
-    # ("Vast Power", "Towering Threat"),
-    # ("Assert Dominance", "Magnifier"),
-    # ("Assert Dominance", "Expansive Might"),
-
+    ("of Incision", "Abecedarian's"),
+    ("of Incision", "Dabbler's"),
+    ("of Incision", "Alchemist's"),
 ]
 
 
-# -----------------------------
-# STASH NAVIGATION
-# -----------------------------
+class ClusterCraftingState:
+    def __init__(self, max_alts: int = 4500, max_scours: int = 750, max_exalts: int = 480):
+        self.spamming = False
+        self.alts = 0
+        self.scours = 0
+        self.exalts = 0
+        self.max_alts = max_alts
+        self.max_scours = max_scours
+        self.max_exalts = max_exalts
 
-def clear_crafting_area_and_move_to_tab(tab_image):
-
-    pyautogui.moveTo(*CRAFTING_TAB_COORDS)
-    pyautogui.leftClick()
-    pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
-    pyautogui.keyDown('ctrl')
-    pyautogui.leftClick()
-    pyautogui.keyUp('ctrl')
-
-    tab_coords = locate_center(tab_image, confidence=0.8)
-    if not tab_coords:
-        raise RuntimeError("Tab not found")
-
-    pyautogui.moveTo(*tab_coords)
-    pyautogui.click()
+    def reset_for_new_item(self):
+        self.spamming = False
 
 
-def move_to_crafter(coords):
-    pyautogui.moveTo(*coords)
-    pyautogui.click()
+@requires_game_ready()
+def craft_clusters_batch(
+    number_of_clusters: int = 50,
+    source_tab: GridStashTab = None,
+    currency_tab: CurrencyTab = None,
+    item_class: str = "Medium Cluster Jewel",
+    start_idx=(0, 0),
+):
+    if source_tab is None:
+        source_tab = GridStashTab(SOURCE_TAB)
 
-    tab_coords = locate_center(CURRENCY_TAB, confidence=0.8)
-    if not tab_coords:
-        raise RuntimeError("Currency tab not found")
+    if currency_tab is None:
+        currency_tab = CurrencyTab(CURRENCY_TAB)
 
-    pyautogui.moveTo(*tab_coords)
-    pyautogui.click()
+    crafted_count = 0
+    state = ClusterCraftingState()
 
-    pyautogui.moveTo(*CURRENCY_CRAFT_COORDS)
-    pyautogui.click()
+    while crafted_count < number_of_clusters and not source_tab.is_done(start_idx):
+        next_idx = source_tab.move_next_item_to_crafter(
+            item_class=item_class,
+            crafting_tab=currency_tab,
+            start_idx=start_idx,
+        )
+
+        if next_idx is None:
+            break
+
+        state.reset_for_new_item()
+        last_cluster_mods = None
+        same_read_count = 0
+
+        while True:
+            max_attempts = 5
+            delay = 0.5
+            cluster_mods = None
+
+            for attempt in range(1, max_attempts + 1):
+                cluster_mods = parse_cluster_mods(currency_tab.craft_coords)
+
+                if cluster_mods is not None:
+                    break
+
+                print(f"Attempt {attempt} failed to parse cluster mods. Retrying...")
+                time.sleep(delay)
+
+            if cluster_mods is None:
+                print("Failed to parse cluster mods after multiple attempts.")
+
+                if not crafting_safe_retry(currency_tab.craft_coords):
+                    print("Failed to safely retry cluster item. Stopping.")
+                    return {
+                        "crafted_count": crafted_count,
+                        "next_idx": start_idx,
+                    }
+
+                break
+
+            # Detect reading the same unchanged item repeatedly, like the map crafter.
+            if cluster_mods == last_cluster_mods:
+                same_read_count += 1
+            else:
+                last_cluster_mods = cluster_mods
+                same_read_count = 1
+
+            if same_read_count >= 10:
+                print("Read the same cluster 10 times in a row. Moving/retrying safely.")
+
+                if not crafting_safe_retry(currency_tab.craft_coords):
+                    print("Failed to safely retry repeated cluster item. Stopping.")
+                    return {
+                        "crafted_count": crafted_count,
+                        "next_idx": start_idx,
+                    }
+
+                break
+
+            result = determine_next_action_cluster(cluster_mods, currency_tab, state)
+
+            if result == "DONE":
+                break
+
+        crafted_count += 1
+        start_idx = next_idx
+
+    print(f"Crafted {crafted_count} clusters in this batch.")
+    return {
+        "crafted_count": crafted_count,
+        "next_idx": start_idx,
+    }
 
 
-# -----------------------------
-# FIND ITEM IN GRID
-# -----------------------------
+def determine_next_action_cluster(mods, crafting_tab: CurrencyTab, state: ClusterCraftingState):
+    if mods is None:
+        print("Failed to parse cluster mods, retrying...")
+        return "CONTINUE"
 
-def find_item(item_class, idx):
-    x0 = START_COORDS[0] + idx[0] * TILE_WIDTH
-    y0 = START_COORDS[1] + idx[1] * TILE_WIDTH
-
-    for col in range(24):
-        for row in range(24):
-            x = x0 + col * TILE_WIDTH
-            y = y0 + row * TILE_WIDTH
-
-            pyautogui.moveTo(x, y)
-            time.sleep(0.02)
-
-            text = copy_item()
-            if not text:
-                continue
-
-            if f"Medium Cluster Jewel".lower() in text.lower():
-                print(f"Found {item_class} at ({x},{y})")
-                move_to_crafter((x, y))
-                return True
-
-    return False
-
-
-def get_item(item_class, tab_image, idx):
-    clear_crafting_area_and_move_to_tab(tab_image)
-    return find_item(item_class, idx)
-
-
-# -----------------------------
-# TARGET LOGIC
-# -----------------------------
-
-def count_targets_found(mods):
-    return sum(
-        any(t.lower() in mod.get('text', '').lower() for mod in mods)
-        for t in CLUSTER_TARGETS
-    )
-
-
-def any_valuable_combo_found(mods):
-    for combo in VALUABLE_COMBOS:
-        if all(
-            any(t.lower() in mod.get('text', '').lower() for mod in mods)
-            for t in combo
-        ):
-            return True
-    return False
-
-
-# -----------------------------
-# CRAFTING LOGIC
-# -----------------------------
-
-spamming = False
-
-def determine_action_clusters(mods):
-    global spamming
-    alts = 0
-    scoure = 0
-    exalts = 0
     num_mods = len(mods)
     num_targets = count_targets_found(mods)
 
-    has_prefix = any(mod.get('type') in ['prefix', 'passive_skill'] for mod in mods)
-    has_suffix = any(mod.get('type') == 'suffix' for mod in mods)
+    has_prefix = any(mod.get("type") in ["prefix", "passive_skill"] for mod in mods)
+    has_suffix = any(mod.get("type") == "suffix" for mod in mods)
 
-    # --- rarity ---
     if num_mods == 0:
         rarity = "normal"
     elif num_mods <= 2:
@@ -151,118 +144,285 @@ def determine_action_clusters(mods):
     else:
         rarity = "rare"
 
-    # --- normal ---
+    print({
+        "rarity": rarity,
+        "num_mods": num_mods,
+        "num_targets": num_targets,
+        "has_prefix": has_prefix,
+        "has_suffix": has_suffix,
+    })
+
     if rarity == "normal":
-        spamming = False
-        use_currency(TRANS)
+        print("Normal cluster, using transmute.")
+        state.spamming = False
+        crafting_tab.trans()
         return "CONTINUE"
 
-    # --- magic ---
     if rarity == "magic":
         if num_targets == 0:
             if has_prefix:
-                alts += 1
-                if alts >= 4500:
-                    exit()
-                if spamming:
-                    spam_currency(ALT)
-                else:
-                    spamming = True
-                    
-                    use_currency(ALT, spammable=True)
-            else:
-                if spamming:
-                    alt_currency(AUG)
-                else:
-                    spamming = False
-                    use_currency(AUG)
+                state.alts += 1
+                if state.alts >= state.max_alts:
+                    raise RuntimeError("Alteration limit reached while crafting clusters.")
 
-        else:
-            if not has_suffix:
-                if spamming:
-                    alt_currency(AUG)
-                else:
-                    spamming = False
-                    use_currency(AUG)
-            else:
-                spamming = False
-                use_currency(REGAL)
+                print("Bad magic cluster with prefix, using alteration.")
+                state.spamming = True
+                crafting_tab.alt()
+                return "CONTINUE"
 
+            print("Magic cluster has no prefix/target, using augment.")
+            state.spamming = False
+            crafting_tab.aug()
+            return "CONTINUE"
+
+        if not has_suffix:
+            print("Magic cluster has target but no suffix, using augment.")
+            state.spamming = False
+            crafting_tab.aug()
+            return "CONTINUE"
+
+        print("Good 2-mod magic cluster, using regal.")
+        state.spamming = False
+        crafting_tab.regal()
         return "CONTINUE"
 
-    # --- rare ---
     if rarity == "rare":
-        spamming = False
+        state.spamming = False
 
         if any_valuable_combo_found(mods):
-            print("✅ Valuable combo found!")
+            print("Valuable combo found, keeping cluster.")
             return "DONE"
 
-        num_prefixes = sum(mod.get('type') in ['prefix', 'passive_skill'] for mod in mods)
+        num_prefixes = count_prefixes(mods)
 
         if num_targets == 1 and num_prefixes == 1:
-            if exalts >= 480:
-                exit()
-            exalts += 1
-            use_currency(EXALT)
-        else:
-            if scoure >= 750:
-                exit()
-            scoure += 1
-            use_currency(SCOURE)
+            state.exalts += 1
+            if state.exalts >= state.max_exalts:
+                raise RuntimeError("Exalt/slam limit reached while crafting clusters.")
 
+            print("Rare cluster has one target prefix, slamming once.")
+            crafting_tab.slam(1)
+            return "CONTINUE"
+
+        state.scours += 1
+        if state.scours >= state.max_scours:
+            raise RuntimeError("Scour limit reached while crafting clusters.")
+
+        print("Bad rare cluster, scouring.")
+        crafting_tab.scoure()
         return "CONTINUE"
 
-
-# -----------------------------
-# INDEX HANDLING
-# -----------------------------
-
-def advance_idx(idx):
-    idx[1] += 1
-    if idx[1] >= 24:
-        idx[1] = 0
-        idx[0] += 1
-    return idx
+    print("Unknown cluster state, continuing.")
+    return "CONTINUE"
 
 
-def is_done(idx):
-    return idx[0] >= 24
+def count_targets_found(mods):
+    return sum(
+        any(target.lower() in mod_text(mod).lower() for target in CLUSTER_TARGETS)
+        for mod in mods
+    )
 
 
-# -----------------------------
-# MAIN LOOP
-# -----------------------------
+def any_valuable_combo_found(mods):
+    return any(
+        all(any(target.lower() in mod_text(mod).lower() for mod in mods) for target in combo)
+        for combo in VALUABLE_COMBOS
+    )
 
-def main():
-    focus_window("Path of Exile")
 
-    idx = [0, 0]
+def count_prefixes(mods):
+    return sum(mod.get("type") in ["prefix", "passive_skill"] for mod in mods)
 
-    while not is_done(idx):
-        print(f"Searching at idx {tuple(idx)}")
 
-        found = get_item(ITEM_CLASS, SRC_TAB, tuple(idx))
-        if not found:
-            print("No more items found. Stopping.")
+def mod_text(mod):
+    return mod.get("text") or mod.get("name") or ""
+from images.img_paths import *
+from stash.tabs.grid_tab import GridStashTab
+from stash.tabs.currency_tab import CurrencyTab
+from utils.initiate_session import requires_game_ready
+from macros.item_parser import parse_cluster_mods
+import time
+from stash.stash_utils import crafting_safe_retry
+
+
+CLUSTER_TARGETS = [
+    "Abecedarian's",
+    "Dabbler's",
+    "Alchemist's",
+    "of Incision",
+]
+
+VALUABLE_COMBOS = [
+    ("of Incision", "Abecedarian's"),
+    ("of Incision", "Dabbler's"),
+    ("of Incision", "Alchemist's"),
+]
+
+
+class ClusterCraftingState:
+    def __init__(self, max_alts: int = 4500, max_scours: int = 750, max_exalts: int = 480):
+        self.spamming = False
+        self.alts = 0
+        self.scours = 0
+        self.exalts = 0
+        self.max_alts = max_alts
+        self.max_scours = max_scours
+        self.max_exalts = max_exalts
+
+    def reset_for_new_item(self):
+        self.spamming = False
+
+
+@requires_game_ready()
+def craft_clusters_batch(
+    number_of_clusters: int = 50,
+    source_tab: GridStashTab = None,
+    currency_tab: CurrencyTab = None,
+    item_class: str = "Medium Cluster Jewel",
+    start_idx=(0, 0),
+):
+    if source_tab is None:
+        source_tab = GridStashTab(SOURCE_TAB)
+
+    if currency_tab is None:
+        currency_tab = CurrencyTab(CURRENCY_TAB)
+
+    crafted_count = 0
+    state = ClusterCraftingState()
+
+    while crafted_count < number_of_clusters and not source_tab.is_done(start_idx):
+        next_idx = source_tab.move_next_item_to_crafter(
+            item_class=item_class,
+            crafting_tab=currency_tab,
+            start_idx=start_idx,
+        )
+
+        if next_idx is None:
             break
 
-        # Craft loop
-        while True:
-            mods = parse_cluster_mods(CURRENCY_CRAFT_COORDS)
-            result = determine_action_clusters(mods)
+        state.reset_for_new_item()
+        last_cluster_mods = None
+        same_read_count = 0
 
-            if result == "DONE":
+        while True:
+            max_attempts = 5
+            delay = 0.5
+            cluster_mods = None
+
+            for attempt in range(1, max_attempts + 1):
+                cluster_mods = parse_cluster_mods(currency_tab.craft_coords)
+
+                if cluster_mods is not None:
+                    break
+
+                print(f"Attempt {attempt} failed to parse cluster mods. Retrying...")
+                time.sleep(delay)
+
+            if cluster_mods is None:
+                print("Failed to parse cluster mods after multiple attempts.")
+
+                if not crafting_safe_retry(currency_tab.craft_coords):
+                    print("Failed to safely retry cluster item. Stopping.")
+                    return {
+                        "crafted_count": crafted_count,
+                        "next_idx": start_idx,
+                    }
+
                 break
 
-        idx = advance_idx(idx)
+            # Detect reading the same unchanged item repeatedly, like the map crafter.
+            if cluster_mods == last_cluster_mods:
+                same_read_count += 1
+            else:
+                last_cluster_mods = cluster_mods
+                same_read_count = 1
 
-    print("Finished all items.")
+            if same_read_count >= 10:
+                print("Read the same cluster 10 times in a row. Moving/retrying safely.")
+
+                if not crafting_safe_retry(currency_tab.craft_coords):
+                    print("Failed to safely retry repeated cluster item. Stopping.")
+                    return {
+                        "crafted_count": crafted_count,
+                        "next_idx": start_idx,
+                    }
+
+                break
+
+            result = determine_next_action_cluster(cluster_mods, currency_tab, state)
+
+            if result == "DONE":
+                exit()
+                break
+
+        crafted_count += 1
+        start_idx = next_idx
+
+    print(f"Crafted {crafted_count} clusters in this batch.")
+    return {
+        "crafted_count": crafted_count,
+        "next_idx": start_idx,
+    }
 
 
-# -----------------------------
-# RUN
-# -----------------------------
+def determine_next_action_cluster(mods, crafting_tab: CurrencyTab, state: ClusterCraftingState):
+    if mods is None:
+        print("Failed to parse cluster mods, retrying...")
+        return "CONTINUE"
+
+    if good_to_keep(mods):
+        print("Good cluster found, keeping.")
+        return "DONE"
+    
+    if good_to_trans(mods):
+        print("Bad cluster with no targets, using transmute.")
+        crafting_tab.trans()
+        return "CONTINUE"
+    
+    if good_to_aug(mods):
+        print("Good cluster for augment, using augment.")
+       
+        crafting_tab.aug()
+        return "CONTINUE"
+    
+    print("Defaulting to alt")
+    crafting_tab.alt()
+    return "CONTINUE"
+
+def good_to_trans(mods):
+    return len(mods) == 0
+
+def good_to_aug(mods):
+    return  len(mods)== 1 and count_targets_found(mods) == 1
+
+def good_to_keep(mods):
+    return count_targets_found(mods) >= 2
+
+def count_targets_found(mods):
+    return sum(
+        any(target.lower() in mod_text(mod).lower() for target in CLUSTER_TARGETS)
+        for mod in mods
+    )
+
+
+def any_valuable_combo_found(mods):
+    return any(
+        all(any(target.lower() in mod_text(mod).lower() for mod in mods) for target in combo)
+        for combo in VALUABLE_COMBOS
+    )
+
+
+def count_prefixes(mods):
+    return sum(mod.get("type") in ["prefix", "passive_skill"] for mod in mods)
+
+
+def mod_text(mod):
+    return mod.get("text") or mod.get("name") or ""
+
 
 if __name__ == "__main__":
-    main()
+    result = craft_clusters_batch(
+        number_of_clusters=10,
+        item_class="Iron Flask",
+    )
+    print(result)
